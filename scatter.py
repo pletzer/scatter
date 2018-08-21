@@ -1,17 +1,16 @@
 import argparse
 import numpy
 import scipy.special
-from matplotlib import pyplot
 from numpy import cos, sin, pi
 import math
-import matplotlib.animation as animation
+import saveVtk
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-n', dest='n', type=int, default=100, help='number of segments')
 parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t)', help='x contour expression of 0 <= t <= 1')
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavenumber')
-parser.add_argument('-plot', dest='plot', action='store_false', help='plot solution')
+parser.add_argument('-save', dest='save', action='store_false', help='save solution in VTK file')
 
 args = parser.parse_args()
 
@@ -62,7 +61,7 @@ xc = eval(args.xContourExpr)
 yc = eval(args.yContourExpr)
 
 # create grid
-nx, ny = 100, 100
+nx, ny = 100, 120
 xmin, xmax = xc.min() - 5*args.lmbda, xc.max() + 3*args.lmbda
 ymin, ymax = yc.min() - 3*args.lmbda, yc.max() + 4*args.lmbda
 xg = numpy.linspace(xmin, xmax, nx + 1)
@@ -118,29 +117,10 @@ for j in range(ny + 1):
 				psi_scattered[j, i] -= (ds/fourPi) * normalGradientGreenFunction(nvec, pm, p) * incidentPsi(pm)
 			
 
-if args.plot:
+if args.save:
 
 	nanim = 20
 	dOmegaTime = twoPi / float(nanim)
-
-	fig, ax = pyplot.subplots()
-	zdata = numpy.real(numpy.exp(1j*0*dOmegaTime) * (psi_scattered + psi_incident))
-	p = pyplot.pcolormesh(xg, yg, zdata, cmap='coolwarm', vmin=-2., vmax=2.)
-
-	pyplot.plot(xc, yc, 'k-')
-
-	def animate(i):
-		z = numpy.real(numpy.exp(1j*i*dOmegaTime) * (psi_scattered + psi_incident))
-		p.set_array(z.ravel())
-	# plot
-	#pyplot.contour(xg, yg, psi_scattered.real, levels=numpy.linspace(-2., 2., 11), linestyles='dashed')
-	#p = pyplot.contour(xg, yg, numpy.real(psi_incident + psi_scattered), levels=numpy.linspace(-2., 2., 11))
-	#p = pyplot.pcolor(xg, yg, numpy.real(psi_incident), cmap='coolwarm')
-	pyplot.colorbar(p)
-
-	# add the obstacle contour
-	
-	#pyplot.axes().set_aspect('equal')
-	ani = animation.FuncAnimation(fig, animate, numpy.arange(1, nanim + 1), 
-                              interval=25,)
-	pyplot.show()
+	for it in range(nanim):
+		data = numpy.real(numpy.exp(1j*it*dOmegaTime) * (psi_scattered + psi_incident))
+		saveVtk.saveData('scatter_{}.vtk'.format(it), xg, yg, data, 'psi_total')
