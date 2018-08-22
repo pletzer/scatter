@@ -19,6 +19,17 @@ def integrate(f, a, b):
 
 	return f(0.5*(a + b)) * (b - a)
 
+def psiIncident(kvec, point):
+	"""
+	Incident wave
+
+	@param kvec incident wave vector
+	@param point (source) point where gradPsiIncident is to be evaluated
+	@return complex number
+	"""
+	return numpy.exp(1j*kvec.dot(point))
+
+
 def gradPsiIncident(nvec, kvec, point):
 	"""
 	Normal gradient of the incident wave, assumes incident wave is exp(1j * kvec.x)
@@ -28,7 +39,7 @@ def gradPsiIncident(nvec, kvec, point):
 	@param point (source) point where gradPsiIncident is to be evaluated
 	@return complex number
 	"""
-	return nvec.dot(1j*kvec*numpy.exp(1j*kvec.dot(point)))
+	return 1j*nvec.dot(kvec)*psiIncident(kvec, point)
 
 
 def computePsiScatteredElement(kvec, p0, p1, point):
@@ -44,7 +55,7 @@ def computePsiScatteredElement(kvec, p0, p1, point):
 	pmid = 0.5*(p0 + p1)
 
 	# segment length
-	ds = numpy.sqrt(xdot.dot(xdot))
+	dsdt = numpy.sqrt(xdot.dot(xdot))
 
 	# normal vector
 	nvec = numpy.cross(xdot, ZHAT)
@@ -58,8 +69,9 @@ def computePsiScatteredElement(kvec, p0, p1, point):
 		r = numpy.sqrt(rvec.dot(rvec))
 		return hankel1(0, kmod * r)
 
-	return gradPsiIncident(nvec, kvec, pmid) * 1j * PI * ds * \
-	       integrate( integrand, 0., 1.) / FOURPI
+	# CHECK SIGN!!!
+	return +gradPsiIncident(nvec, kvec, pmid) * (1j/4.) * dsdt * \
+	       integrate(integrand, 0., 1.)
 
 
 def computePsiScattered(kvec, xc, yc, point):
@@ -79,7 +91,6 @@ def computePsiScattered(kvec, xc, yc, point):
 		p0 = numpy.array([xc[i0], yc[i0], 0.])
 		i1 = i0 + 1
 		p1 = numpy.array([xc[i1], yc[i1], 0.])
-		print computePsiScatteredElement(kvec, p0, p1, point)
 		res += computePsiScatteredElement(kvec, p0, p1, point)
 	return res
 
