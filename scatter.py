@@ -4,14 +4,16 @@ import scipy.special
 from numpy import cos, sin, pi
 import math
 import saveVtk
-import psi_scattered
+import wave
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
-parser.add_argument('-n', dest='n', type=int, default=100, help='number of segments')
+parser.add_argument('-ns', dest='ns', type=int, default=100, help='number of segments')
+parser.add_argument('-nx', dest='nx', type=int, default=100, help='number of x cells')
+parser.add_argument('-ny', dest='ny', type=int, default=100, help='number of y cells')
 parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t)', help='x contour expression of 0 <= t <= 1')
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
-parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavenumber')
-parser.add_argument('-save', dest='save', action='store_false', help='save solution in VTK file')
+parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
+parser.add_argument('-save', dest='save', action='store_false', help='save time varying solution in VTK files')
 
 args = parser.parse_args()
 
@@ -32,12 +34,12 @@ def isInsideContour(p, xc, yc):
 	return (abs(tot) > 0.1)
 
 # contour points of the obstacle
-t = numpy.linspace(0., 1., args.n + 1)
+t = numpy.linspace(0., 1., args.ns + 1)
 xc = eval(args.xContourExpr)
 yc = eval(args.yContourExpr)
 
-# create grid
-nx, ny = 200, 200
+# create grid 
+nx, ny = args.nx, args.ny
 xmin, xmax = xc.min() - 5*args.lmbda, xc.max() + 3*args.lmbda
 ymin, ymax = yc.min() - 3*args.lmbda, yc.max() + 4*args.lmbda
 xg = numpy.linspace(xmin, xmax, nx + 1)
@@ -59,8 +61,8 @@ for j in range(ny + 1):
 		if isInsideContour(p, xc, yc):
 			continue
 
-		inci[j, i] = psi_scattered.psiIncident(kvec, p)
-		scat[j, i] = psi_scattered.computePsiScattered(kvec, xc, yc, p)
+		inci[j, i] = wave.incident(kvec, p)
+		scat[j, i] = wave.computeScatteredWave(kvec, xc, yc, p)
 
 			
 

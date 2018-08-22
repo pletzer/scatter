@@ -7,42 +7,30 @@ TWOPI = 2. * PI
 FOURPI = 2. * TWOPI
 
 
-
-def integrate(f, a, b):
-	"""
-	Definite integral using mid-point rule
-
-	@param f function to integrate
-	@param a lower bound
-	@param b upper bound
-	"""
-
-	return f(0.5*(a + b)) * (b - a)
-
-def psiIncident(kvec, point):
+def incident(kvec, point):
 	"""
 	Incident wave
 
 	@param kvec incident wave vector
-	@param point (source) point where gradPsiIncident is to be evaluated
+	@param point target point
 	@return complex number
 	"""
 	return numpy.exp(1j*kvec.dot(point))
 
 
-def gradPsiIncident(nvec, kvec, point):
+def gradIncident(nvec, kvec, point):
 	"""
 	Normal gradient of the incident wave, assumes incident wave is exp(1j * kvec.x)
 
 	@param nvec normal vector pointing outwards
 	@param kvec incident wave vector
-	@param point (source) point where gradPsiIncident is to be evaluated
+	@param point (source) point
 	@return complex number
 	"""
-	return 1j*nvec.dot(kvec)*psiIncident(kvec, point)
+	return 1j*nvec.dot(kvec)*incident(kvec, point)
 
 
-def computePsiScatteredElement(kvec, p0, p1, point):
+def computeScatteredWaveElement(kvec, p0, p1, point):
 	"""
 	Scattered wave contribution from a single segment
 	@param kvec incident wave vector
@@ -63,18 +51,14 @@ def computePsiScatteredElement(kvec, p0, p1, point):
 
 	kmod = numpy.sqrt(kvec.dot(kvec))
 
-	def integrand(t):
-		# vector from source to observer
-		rvec = point - (p0 + xdot*t)
-		r = numpy.sqrt(rvec.dot(rvec))
-		return hankel1(0, kmod * r)
+	rvec = point - pmid
+	r = numpy.sqrt(rvec.dot(rvec))
 
 	# CHECK SIGN!!!
-	return +gradPsiIncident(nvec, kvec, pmid) * (1j/4.) * dsdt * \
-	       integrate(integrand, 0., 1.)
+	return +gradIncident(nvec, kvec, pmid) * (1j/4.) * dsdt * \
+            hankel1(0, kmod * r)
 
-
-def computePsiScattered(kvec, xc, yc, point):
+def computeScatteredWave(kvec, xc, yc, point):
 	"""
 	Total scattered wave response, summing up 
 	contributions from each segment
@@ -91,6 +75,6 @@ def computePsiScattered(kvec, xc, yc, point):
 		p0 = numpy.array([xc[i0], yc[i0], 0.])
 		i1 = i0 + 1
 		p1 = numpy.array([xc[i1], yc[i1], 0.])
-		res += computePsiScatteredElement(kvec, p0, p1, point)
+		res += computeScatteredWaveElement(kvec, p0, p1, point)
 	return res
 
