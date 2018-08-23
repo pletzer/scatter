@@ -57,9 +57,13 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 
 	kr = kmod * r
 
+	# Green functions and normal derivatives
+	g = (1j/4.) * hankel1(0, kr)
+	dgdn = (-1j/4.) * hankel1(1, kr) * kmod * nvec.dot(rvec) / r
+
 	# contribution from the gradient of the incident wave on the surface
 	# of the obstacle
-	res = gradIncident(nvec, kvec, pmid) * dsdt * (1j/4.) * hankel1(0, kr)
+	scattered_wave = gradIncident(nvec, kvec, pmid) * dsdt * g
 
 	# shadow side: total wave is nearly zero 
 	#              => scattered wave amplitude = -incident wave ampl.
@@ -67,15 +71,13 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	# illuminated side:
 	#              => scattered wave amplitude = +incident wave ampl.
 
-	# NEED TO FIGURE OUT SIGN
-	illum = -1
-	if nvec.dot(kvec) > 0.:
-		# shadow side
-		illum = +1
+	shadow = 2*((nvec.dot(kvec) > 0.) - 0.5) # +1 on the shadow side, -1 on the illuminated side
 
-	res += illum * incident(kvec, pmid) * dsdt * (-1j/4.) * hankel1(1, kr) * kmod * nvec.dot(rvec) / r
+	# CHECK SIGN
+	scattered_wave -= shadow * incident(kvec, pmid) * dsdt * dgdn
 
-	return res
+	return scattered_wave
+
 
 def computeScatteredWave(kvec, xc, yc, point):
 	"""
