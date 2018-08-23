@@ -49,14 +49,33 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	nvec = numpy.cross(xdot, ZHAT)
 	nvec /= numpy.sqrt(nvec.dot(nvec))
 
+
 	kmod = numpy.sqrt(kvec.dot(kvec))
 
 	rvec = point - pmid
 	r = numpy.sqrt(rvec.dot(rvec))
 
-	# CHECK SIGN!!!
-	return +gradIncident(nvec, kvec, pmid) * (1j/4.) * dsdt * \
-            hankel1(0, kmod * r)
+	kr = kmod * r
+
+	# contribution from the gradient of the incident wave on the surface
+	# of the obstacle
+	res = gradIncident(nvec, kvec, pmid) * dsdt * (1j/4.) * hankel1(0, kr)
+
+	# shadow side: total wave is nearly zero 
+	#              => scattered wave amplitude = -incident wave ampl.
+	#
+	# illuminated side:
+	#              => scattered wave amplitude = +incident wave ampl.
+
+	# NEED TO FIGURE OUT SIGN
+	illum = -1
+	if nvec.dot(kvec) > 0.:
+		# shadow side
+		illum = +1
+
+	res += illum * incident(kvec, pmid) * dsdt * (-1j/4.) * hankel1(1, kr) * kmod * nvec.dot(rvec) / r
+
+	return res
 
 def computeScatteredWave(kvec, xc, yc, point):
 	"""
