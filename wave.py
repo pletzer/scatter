@@ -39,22 +39,25 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	@param point observer point
 	@return complex value
 	"""
+
+	# xdot is antoclockwise
 	xdot = p1 - p0
+
+	# mid point of the segment
 	pmid = 0.5*(p0 + p1)
 
 	# segment length
 	dsdt = numpy.sqrt(xdot.dot(xdot))
 
-	# normal vector
-	nvec = numpy.cross(xdot, ZHAT)
+	# normal vector, pointintg inwards and normalised
+	nvec = numpy.cross(ZHAT, xdot)
 	nvec /= numpy.sqrt(nvec.dot(nvec))
 
-
-	kmod = numpy.sqrt(kvec.dot(kvec))
-
+	# from segment mid-point to observer
 	rvec = point - pmid
 	r = numpy.sqrt(rvec.dot(rvec))
 
+	kmod = numpy.sqrt(kvec.dot(kvec))
 	kr = kmod * r
 
 	# Green functions and normal derivatives
@@ -62,19 +65,17 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	dgdn = (-1j/4.) * hankel1(1, kr) * kmod * nvec.dot(rvec) / r
 
 	# contribution from the gradient of the incident wave on the surface
-	# of the obstacle
-	scattered_wave = gradIncident(nvec, kvec, pmid) * dsdt * g
+	# of the obstacle. The normal derivative of the scattered wave is 
+	# - normal derivative of the incident wave.
+	scattered_wave = - dsdt * g * gradIncident(nvec, kvec, pmid)
 
 	# shadow side: total wave is nearly zero 
 	#              => scattered wave amplitude = -incident wave ampl.
 	#
 	# illuminated side:
 	#              => scattered wave amplitude = +incident wave ampl.
-
 	shadow = 2*((nvec.dot(kvec) > 0.) - 0.5) # +1 on the shadow side, -1 on the illuminated side
-
-	# CHECK SIGN
-	scattered_wave -= shadow * incident(kvec, pmid) * dsdt * dgdn
+	scattered_wave += shadow * dsdt * dgdn * incident(kvec, pmid)
 
 	return scattered_wave
 
