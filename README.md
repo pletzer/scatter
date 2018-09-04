@@ -17,9 +17,9 @@ segment.
 
 ## Requirements
 
- * Python 2.7.x (tested 2.7.14) or 3.x
- * Scipy (tested 1.0.1)
- * Numpy (tested 1.13.1)
+ * Python 2.7.x (tested 2.7.14) or 3.x (tested 3.6.3)
+ * Scipy (tested 1.0.0, 1.0.1)
+ * Numpy (tested 1.13.1, 1.13.3)
 
 ## How to run the code
 
