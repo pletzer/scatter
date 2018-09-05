@@ -14,6 +14,8 @@ parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t + 
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
 parser.add_argument('-save', dest='save', action='store_false', help='do not save time varying solution in VTK files')
+parser.add_argument('-checksum', dest='checksum', action='store_true', help='compute and print a checksum of the scattered wave')
+
 
 args = parser.parse_args()
 
@@ -64,7 +66,8 @@ for j in range(ny + 1):
 		inci[j, i] = wave.incident(kvec, p)
 		scat[j, i] = wave.computeScatteredWave(kvec, xc, yc, p)
 
-			
+if args.checksum:
+	print('Squared sum of scattered field amplitudes: {}'.format((scat*numpy.conj(scat)).sum().real))
 
 if args.save:
 
