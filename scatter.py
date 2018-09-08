@@ -29,7 +29,7 @@ def isInsideContour(p, xc, yc, tol=0.01):
 	"""
 	Check is a point is inside closed contour by summing the 
 	the angles between point p, (xc[i], yc[i]) and (xc[i+1], yc[i+1]).
-	Point p id declared ot be inside if the total angle amounts to 
+	Point p id declared to be inside if the total angle amounts to 
 	2*pi.
 
 	@param p point (2d array)
