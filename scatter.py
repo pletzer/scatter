@@ -13,7 +13,7 @@ parser.add_argument('-ny', dest='ny', type=int, default=100, help='number of y c
 parser.add_argument('-nc', dest='nc', type=int, default=100, help='number of contour segments')
 parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t + 0.5*sin(2*pi*t + 0.9))', help='x contour expression of 0 <= t <= 1')
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
-parser.add_argument('-save', dest='save', action='store_false', help='do not save time varying solution in VTK files')
+parser.add_argument('-save', dest='save', action='store_true', help='save time varying solution in VTK files')
 parser.add_argument('-checksum', dest='checksum', action='store_true', help='compute and print a checksum of the scattered wave')
 
 
