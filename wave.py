@@ -21,7 +21,7 @@ def gradIncident(nvec, kvec, point):
 	"""
 	Normal gradient of the incident wave, assumes incident wave is exp(1j * kvec.x)
 
-	@param nvec normal vector pointing outwards
+	@param nvec normal vector pointing inwards
 	@param kvec incident wave vector
 	@param point (source) point
 	@return complex number
@@ -39,7 +39,7 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	@return complex value
 	"""
 
-	# xdot is antoclockwise
+	# xdot is anticlockwise
 	xdot = p1 - p0
 
 	# mid point of the segment
