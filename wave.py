@@ -1,7 +1,6 @@
 import numpy
 from scipy.special import hankel1
 
-ZHAT = numpy.array([0., 0., 1.])
 PI = numpy.pi
 TWOPI = 2. * PI
 FOURPI = 2. * TWOPI
@@ -50,7 +49,7 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	dsdt = numpy.sqrt(xdot.dot(xdot))
 
 	# normal vector, pointintg inwards and normalised
-	nvec = numpy.cross(ZHAT, xdot)
+	nvec = numpy.array((-xdot[1], xdot[0], 0))
 	nvec /= numpy.sqrt(nvec.dot(nvec))
 
 	# from segment mid-point to observer
