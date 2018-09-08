@@ -83,7 +83,7 @@ if args.checksum:
 	print('Squared sum of scattered field amplitudes: {}'.format((scat*numpy.conj(scat)).sum().real))
 
 if args.save:
-
+	# number of time frames
 	nanim = 20
 	dOmegaTime = twoPi / float(nanim)
 	for it in range(nanim):
