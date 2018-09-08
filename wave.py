@@ -49,7 +49,7 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 	dsdt = numpy.sqrt(xdot.dot(xdot))
 
 	# normal vector, pointintg inwards and normalised
-	nvec = numpy.array((-xdot[1], xdot[0], 0))
+	nvec = numpy.array([-xdot[1], xdot[0],])
 	nvec /= numpy.sqrt(nvec.dot(nvec))
 
 	# from segment mid-point to observer
@@ -93,9 +93,9 @@ def computeScatteredWave(kvec, xc, yc, point):
 	res = 0j
 	n = len(xc)
 	for i0 in range(n - 1):
-		p0 = numpy.array([xc[i0], yc[i0], 0.])
+		p0 = numpy.array([xc[i0], yc[i0],])
 		i1 = i0 + 1
-		p1 = numpy.array([xc[i1], yc[i1], 0.])
+		p1 = numpy.array([xc[i1], yc[i1],])
 		res += computeScatteredWaveElement(kvec, p0, p1, point)
 	return res
 

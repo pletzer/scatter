@@ -23,7 +23,7 @@ twoPi = 2. * numpy.pi
 
 # incident wavenumber
 knum = 2 * numpy.pi / args.lmbda
-kvec = numpy.array([knum, 0., 0.], numpy.float64)
+kvec = numpy.array([knum, 0.,], numpy.float64)
 
 def isInsideContour(p, xc, yc):
 	tot = 0.0
@@ -58,7 +58,7 @@ for j in range(ny + 1):
 
 		# need to check that x,y are outside contour
 		# otherwise continue
-		p = numpy.array([x, y, 0.0])
+		p = numpy.array([x, y,])
 
 		if isInsideContour(p, xc, yc):
 			continue
