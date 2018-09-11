@@ -29,8 +29,9 @@ python scatter.py --help
 ```
 for a list of options. For a wavelength of 0.2, a circular obstacle using 64 segments on a 100 x 200 grid type
 ```
-python scatter.py -nx 100 -ny 200 -ns 64 -xc "cos(2*pi*t)" -yc "sin(2*pi*t)" -lambda 0.3
+python scatter.py -nx 100 -ny 200 -nc 64 -xc "cos(2*pi*t)" -yc "sin(2*pi*t)" -lambda 0.2 -s -c
 ```
+Option `-nc` will print a check sum of the field.
 
 ## Example results
 
