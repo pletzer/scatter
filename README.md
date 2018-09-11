@@ -31,7 +31,7 @@ for a list of options. For a wavelength of 0.2, a circular obstacle using 64 seg
 ```
 python scatter.py -nx 100 -ny 200 -nc 64 -xc "cos(2*pi*t)" -yc "sin(2*pi*t)" -lambda 0.2 -s -c
 ```
-Option `-nc` will print a check sum of the field.
+Option `-c` will print a check sum of the field.
 
 ## Example results
 
