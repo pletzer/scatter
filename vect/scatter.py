@@ -74,7 +74,7 @@ for j in range(ny + 1):
         # otherwise continue
         p = numpy.array([x, y,])
 
-        # skip if poiont is inside closed contour
+        # skip if point is inside closed contour
         if isInsideContour(p, xc, yc):
             continue
 
