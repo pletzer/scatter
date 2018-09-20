@@ -10,9 +10,9 @@ import wave
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
-parser.add_argument('-nx', dest='nx', type=int, default=100, help='number of x cells')
-parser.add_argument('-ny', dest='ny', type=int, default=100, help='number of y cells')
-parser.add_argument('-nc', dest='nc', type=int, default=100, help='number of contour segments')
+parser.add_argument('-nx', dest='nx', type=int, default=128, help='number of x cells')
+parser.add_argument('-ny', dest='ny', type=int, default=128, help='number of y cells')
+parser.add_argument('-nc', dest='nc', type=int, default=128, help='number of contour segments')
 parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t + 0.5*sin(2*pi*t + 0.9))', help='x contour expression of 0 <= t <= 1')
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
 parser.add_argument('-save', dest='save', action='store_true', help='save time varying solution in VTK files')

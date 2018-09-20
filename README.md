@@ -47,6 +47,7 @@ python scatter.py
 If you change the code and need to verify that the result has not changed, 
 ```
 python scatter.py -checksum
+Sum of scattered field |amplitudes|^2: 4686.33935547
 ```
 as this will print out a check sum. Additional options can be invoked to adjust the problem size
 and other parameters (type `python scatter.py --help` for a full list). The result can be saved in a VTK file using
