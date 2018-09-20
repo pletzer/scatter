@@ -38,13 +38,15 @@ def isInsideContour(p, xc, yc, tol=0.01):
     @param tol tolerance
     @return True if p is inside, False otherwise
     """
-    tot = 0.0
-    for i0 in range(len(xc) - 1):
-        i1 = i0 + 1
-        a = numpy.array([xc[i0], yc[i0]]) - p[:2]
-        b = numpy.array([xc[i1], yc[i1]]) - p[:2]
-        tot += math.atan2(a[0]*b[1] - a[1]*b[0], a.dot(b))
-    tot /= twoPi
+    n = len(xc)
+    nm1 = n - 1 # number of segments
+    a = numpy.zeros((nm1, 2), numpy.float64)
+    a[:, 0] = xc[:-1] - p[0]
+    a[:, 1] = yc[:-1] - p[1]
+    b = numpy.zeros((nm1, 2), numpy.float64)
+    b[:, 0] = xc[1:] - p[0]
+    b[:, 1] = yc[1:] - p[1]
+    tot = numpy.sum(numpy.arctan2(a[:,0]*b[:,1] - a[:,1]*b[:,0], numpy.sum(a*b, axis=1))) / twoPi
     return (abs(tot) > tol)
 
 # contour points of the obstacle
