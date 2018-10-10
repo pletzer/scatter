@@ -61,12 +61,7 @@ ny1, nx1 = ny + 1, nx + 1
 xg = numpy.linspace(xmin, xmax, nx1)
 yg = numpy.linspace(ymin, ymax, ny1)
 
-
-# compute the field
-scat = numpy.zeros((ny1, nx1), numpy.complex64)
-inci = numpy.zeros((ny1, nx1), numpy.complex64)
-
-for k in range(ny1 * nx1):
+def computeField(k):
 
     # get the i j indices
     j = k // nx1
@@ -81,10 +76,18 @@ for k in range(ny1 * nx1):
 
     # skip if point is inside closed contour
     if isInsideContour(p, xc, yc):
-        continue
+        return (0j, 0j)
+    else:
+        inci_val = wave.incident(kvec, p)
+        scat_val = wave.computeScatteredWave(kvec, xc, yc, p)
+        return (inci_val, scat_val)
 
-    inci[j, i] = wave.incident(kvec, p)
-    scat[j, i] = wave.computeScatteredWave(kvec, xc, yc, p)
+res = [computeField(k) for k in range(ny1 * nx1)]
+
+# compute the field
+inci = numpy.array([r[0] for r in res], numpy.complex64).reshape((ny1, nx1))
+scat = numpy.array([r[1] for r in res], numpy.complex64).reshape((ny1, nx1))
+
 
 if args.checksum:
     print('Sum of scattered field |amplitudes|^2: {}'.format((scat*numpy.conj(scat)).sum().real))
