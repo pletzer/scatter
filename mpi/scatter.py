@@ -126,7 +126,9 @@ if args.save:
     localWave = inci + scat
     globalWave = comm.gather(localWave, root=root)
     if pe == root:
-        globalWave = numpy.ravel(globalWave).reshape(ny1, nx1)
+        # turn the list of arrays - saveData wants an array of size ny1 * nx1 
+        # so flatten the array and then apply the reshape operator
+        globalWave = numpy.ravel(globalWave).reshape((ny1, nx1))
         for it in range(nanim):
             totalWave = numpy.real(numpy.exp(-1j*it*dOmegaTime) * globalWave)
             saveVtk.saveData('scatter_{}.vtk'.format(it), xg, yg, totalWave, 'total')
