@@ -106,8 +106,12 @@ indxEnd = min(ntot, nLocal*(pe + 1))
 
 # IMPLEMENT FIELD COMPUTATION HERE
 # USE 1D FIELD ARRAYS AND CALL computeField
-# inci = incident field
-# scat = scattered field
+# inci = incident field on local process
+# scat = scattered field on local process
+# ...
+localWave = inci + scat
+# GATHER localWave ON PROCESS ROOT
+# globalWave = is localWave gathered on pe == root
 
 if args.checksum:
     localSum = (scat*numpy.conj(scat)).sum()
@@ -119,12 +123,7 @@ if args.save:
     # number of time frames
     nanim = 20
     dOmegaTime = twoPi / float(nanim)
-    localWave = inci + scat
-    globalWave = comm.gather(localWave, root=root)
     if pe == root:
-        # turn the list of arrays - saveData wants an array of size ny1 * nx1 
-        # so flatten the array and then apply the reshape operator
-        globalWave = numpy.ravel(globalWave).reshape((ny1, nx1))
         for it in range(nanim):
             totalWave = numpy.real(numpy.exp(-1j*it*dOmegaTime) * globalWave)
             saveVtk.saveData('scatter_{}.vtk'.format(it), xg, yg, totalWave, 'total')
