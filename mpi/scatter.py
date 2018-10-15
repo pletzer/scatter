@@ -112,6 +112,13 @@ for indx in range(indxBeg, indxEnd):
     i0 = indx - indxBeg
     inci[i0], scat[i0] = computeField(indx)
 
+# gather the total wave on the root process
+localWave = inci + scat
+globalWave = comm.gather(localWave, root=root)
+# turn the list of arrays - saveData wants an array of size ny1 * nx1 
+# so flatten the array and then apply the reshape operator
+if pe == root:
+    globalWave = numpy.ravel(globalWave).reshape((ny1, nx1))
 
 if args.checksum:
     localSum = (scat*numpy.conj(scat)).sum()
@@ -123,12 +130,7 @@ if args.save:
     # number of time frames
     nanim = 20
     dOmegaTime = twoPi / float(nanim)
-    localWave = inci + scat
-    globalWave = comm.gather(localWave, root=root)
     if pe == root:
-        # turn the list of arrays - saveData wants an array of size ny1 * nx1 
-        # so flatten the array and then apply the reshape operator
-        globalWave = numpy.ravel(globalWave).reshape((ny1, nx1))
         for it in range(nanim):
             totalWave = numpy.real(numpy.exp(-1j*it*dOmegaTime) * globalWave)
             saveVtk.saveData('scatter_{}.vtk'.format(it), xg, yg, totalWave, 'total')
