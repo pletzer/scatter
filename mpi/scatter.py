@@ -96,7 +96,7 @@ root = nprocs - 1
 ntot = ny1 * nx1
 
 # number of points per process
-n = int(math.floor(ntot / float(nprocs)))
+n = int(math.ceil(ntot / float(nprocs)))
 
 # get the start and one past end indices for each proc
 indxBeg = n * pe
