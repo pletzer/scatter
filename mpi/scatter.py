@@ -96,14 +96,14 @@ root = nprocs - 1
 ntot = ny1 * nx1
 
 # number of points per process
-nLocal = int(math.ceil(ntot / float(nprocs)))
-
+n = int(math.ceil(ntot / float(nprocs)))
 
 # get the start and one past end indices for each proc
-indxBeg = nLocal * pe
+indxBeg = n * pe
 # last process acts as root and gets fewer points
-indxEnd = min(ntot, nLocal*(pe + 1))
+indxEnd = min(ntot, n*(pe + 1))
 
+nLocal = indxEnd - indxBeg
 
 # compute the field
 inci = numpy.zeros((nLocal,), numpy.complex64)
@@ -118,7 +118,7 @@ globalWave = comm.gather(localWave, root=root)
 # turn the list of arrays - saveData wants an array of size ny1 * nx1 
 # so flatten the array and then apply the reshape operator
 if pe == root:
-    globalWave = numpy.ravel(globalWave).reshape((ny1, nx1))
+    globalWave = numpy.concatenate(globalWave).reshape((ny1, nx1))
 
 if args.checksum:
     localSum = (scat*numpy.conj(scat)).sum()
