@@ -96,13 +96,15 @@ root = nprocs - 1
 ntot = ny1 * nx1
 
 # number of points per process
-nLocal = int(math.ceil(ntot / float(nprocs)))
-
+n = int(math.ceil(ntot / float(nprocs)))
 
 # get the start and one past end indices for each proc
-indxBeg = nLocal * pe
+indxBeg = n * pe
 # last process acts as root and gets fewer points
-indxEnd = min(ntot, nLocal*(pe + 1))
+indxEnd = min(ntot, n*(pe + 1))
+
+# local number of points
+nLocal = indxEnd - indxBeg # can be smaller than n
 
 # IMPLEMENT FIELD COMPUTATION HERE
 # USE 1D FIELD ARRAYS AND CALL computeField
