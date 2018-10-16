@@ -96,12 +96,15 @@ root = nprocs - 1
 ntot = ny1 * nx1
 
 # number of points per process
-n = int(math.ceil(ntot / float(nprocs)))
+n = int(math.floor(ntot / float(nprocs)))
 
 # get the start and one past end indices for each proc
 indxBeg = n * pe
 # last process acts as root and gets fewer points
-indxEnd = min(ntot, n*(pe + 1))
+indxEnd = n*(pe + 1)
+if pe == root:
+    # take points as many as needed
+    indxEnd = ntot
 
 nLocal = indxEnd - indxBeg
 
