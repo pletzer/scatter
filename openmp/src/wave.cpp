@@ -104,21 +104,20 @@ cincident (const double kvec[], const double point[], double* real_part, double*
     *imag_part = res.imag();
 }
 
-//#pragma omp declare reduction(+ : std::complex<double> : omp_out += omp_in) initializer( omp_priv=(0., 0.))
-
 extern "C" void computeScatteredWave(const double kvec[], int nc, const double xc[], const double yc[], 
                                      const double point[], double* real_part, double* imag_part) {
-
     double p0[2], p1[2];
     std::complex<double> res(0., 0.);
+    // define basic data types for reduction, otherwise a user defined reduction operator needs to be defined
     double res_real=0., res_imag=0.;
-
+    // OpenMP pragma defined the pallel region (where threads are spawn), data clauses and reduction
     #pragma omp parallel for private(p0,p1,res) reduction(+:res_real,res_imag)
     for (int i = 0; i < nc - 1; ++i) {
-
         p0[0] = xc[i]; p0[1] = yc[i];
         p1[0] = xc[i + 1]; p1[1] = yc[i + 1];
+        // just use res as intermediate variable
         res = computeScatteredWaveElement(kvec, p0, p1, point);
+        // use simple data types for reduction
         res_real += res.real();
         res_imag += res.imag();
     }
