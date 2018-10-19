@@ -110,7 +110,7 @@ extern "C" void computeScatteredWave(const double kvec[], int nc, const double x
     std::complex<double> res(0., 0.);
     // define basic data types for reduction, otherwise a user defined reduction operator needs to be defined
     double res_real=0., res_imag=0.;
-    // OpenMP pragma defined the pallel region (where threads are spawn), data clauses and reduction
+    // OpenMP defined parallel region (where threads are spawn), data clauses and reduction
     #pragma omp parallel for private(p0,p1,res) reduction(+:res_real,res_imag)
     for (int i = 0; i < nc - 1; ++i) {
         p0[0] = xc[i]; p0[1] = yc[i];

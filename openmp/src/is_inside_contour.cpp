@@ -7,7 +7,7 @@ isInsideContour(const double p[], int n,
     
     double a[2], b[2];
     double tot = 0.0;
-    // OpenMP pragma defined the pallel region (where threads are spawn), data clauses and reduction
+    // OpenMP pragma defined parallel region (where threads are spawn), data clauses and reduction
     #pragma omp parallel for private(a,b) reduction(+:tot)
     for (int i0 = 0; i0 < n - 1; ++i0) {
         int i1 = i0 + 1;
