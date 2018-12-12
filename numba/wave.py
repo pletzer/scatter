@@ -54,7 +54,7 @@ def incident(kvec, point):
     @param point target point
     @return complex number
     """
-    return numpy.exp(1j*kvec.dot(point))
+    return numpy.exp(1j*numpy.dot(kvec, point))
 
 @jit(nopython=True)
 def gradIncident(nvec, kvec, point):
@@ -66,7 +66,7 @@ def gradIncident(nvec, kvec, point):
     @param point (source) point
     @return complex number
     """
-    return 1j*nvec.dot(kvec)*incident(kvec, point)
+    return 1j*numpy.dot(nvec, kvec)*incident(kvec, point)
 
 @jit(nopython=True)
 def computeScatteredWaveElement(kvec, p0, p1, point):
@@ -86,22 +86,22 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
     pmid = 0.5*(p0 + p1)
 
     # segment length
-    dsdt = numpy.sqrt(xdot.dot(xdot))
+    dsdt = numpy.sqrt(numpy.dot(xdot, xdot))
 
     # normal vector, pointintg inwards and normalised
     nvec = numpy.array([-xdot[1], xdot[0],])
-    nvec /= numpy.sqrt(nvec.dot(nvec))
+    nvec /= numpy.sqrt(numpy.dot(nvec, nvec))
 
     # from segment mid-point to observer
     rvec = point - pmid
-    r = numpy.sqrt(rvec.dot(rvec))
+    r = numpy.sqrt(numpy.dot(rvec, rvec))
 
-    kmod = numpy.sqrt(kvec.dot(kvec))
+    kmod = numpy.sqrt(numpy.dot(kvec, kvec))
     kr = kmod * r
 
     # Green functions and normal derivatives
     g = (1j/4.) * hankel1_0(kr)
-    dgdn = (-1j/4.) * hankel1_1(kr) * kmod * nvec.dot(rvec) / r
+    dgdn = (-1j/4.) * hankel1_1(kr) * kmod * numpy.dot(nvec, rvec) / r
 
     # contribution from the gradient of the incident wave on the surface
     # of the obstacle. The normal derivative of the scattered wave is 
@@ -113,7 +113,7 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
     #
     # illuminated side:
     #              => scattered wave amplitude = +incident wave ampl.
-    shadow = 2*((nvec.dot(kvec) > 0.) - 0.5) # +1 on the shadow side, -1 on the illuminated side
+    shadow = 2*((numpy.dot(nvec, kvec) > 0.) - 0.5) # +1 on the shadow side, -1 on the illuminated side
     scattered_wave += shadow * dsdt * dgdn * incident(kvec, pmid)
 
     return scattered_wave

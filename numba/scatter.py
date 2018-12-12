@@ -46,7 +46,7 @@ def isInsideContour(p, xc, yc, tol=0.01):
         i1 = i0 + 1
         a = numpy.array([xc[i0], yc[i0]]) - p[:2]
         b = numpy.array([xc[i1], yc[i1]]) - p[:2]
-        tot += math.atan2(a[0]*b[1] - a[1]*b[0], a.dot(b))
+        tot += math.atan2(a[0]*b[1] - a[1]*b[0], numpy.dot(a, b))
     tot /= twoPi
     return (abs(tot) > tol)
 
