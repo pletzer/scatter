@@ -6,6 +6,7 @@ import math
 import saveVtk
 import wave
 import multiprocessing
+import os
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
@@ -16,12 +17,13 @@ parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t + 
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
 parser.add_argument('-save', dest='save', action='store_true', help='save time varying solution in VTK files')
 parser.add_argument('-checksum', dest='checksum', action='store_true', help='compute and print a checksum of the scattered wave')
-parser.add_argument('-nproc', dest='nproc', type=int, default=1, help='number of processes')
 
 
 args = parser.parse_args()
 
 twoPi = 2. * numpy.pi
+# get the number of threads from the environment variable OMP_NUM_THREADS
+nproc = int(os.environ.get('OMP_NUM_THREADS', '1'))
 
 # incident wavenumber
 knum = 2 * numpy.pi / args.lmbda
@@ -83,7 +85,7 @@ def computeField(k):
         scat_val = wave.computeScatteredWave(kvec, xc, yc, p)
         return (inci_val, scat_val)
 
-pool = multiprocessing.Pool(processes=args.nproc)
+pool = multiprocessing.Pool(processes=nproc)
 res = pool.map(computeField, list(range(ny1 * nx1)))
 
 # compute the field
