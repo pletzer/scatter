@@ -1,15 +1,22 @@
 #include "wave.h"
 #include <boost/math/special_functions/bessel.hpp>
 
+// Make sure that Boost is thread-safe - we call Boost functions
+// from within a parallel (threaded) region
+#ifndef BOOST_HAS_THREADS
+#error This version of Boost does NOT support multithreading - please rebuild with multithreading enabled
+#endif
+
 /**
  * Hankel_n^{(1)} function
  * 
- * @param  n index
+ * @param n index
  * @param x argument
  * @return value
  */
 std::complex<double>
-hankel1(int n, double x) {
+hankel1(const int n, const double x) {
+    // We requested a Boost library with multithreading support
     double besselJ = boost::math::cyl_bessel_j<int, double>(n, x);
     double besselY = boost::math::cyl_neumann<int, double>(n, x);
     return besselJ + J1*besselY;
@@ -24,6 +31,7 @@ hankel1(int n, double x) {
  */
 std::complex<double> 
 incident(const double kvec[], const double point[]) {
+    // std::exp should be thread-safe
     return std::exp(J1*(kvec[0]*point[0] + kvec[1]*point[1]));
 }
 
@@ -61,16 +69,17 @@ computeScatteredWaveElement(const double kvec[], const double p0[],
     double pmid[] = {0.5*(p0[0] + p1[0]), 0.5*(p0[1] + p1[1])};
 
     // segment length
-    double dsdt = sqrt(xdot[0]*xdot[0] + xdot[1]*xdot[1]);
+    // std:sqrt should be thread-safe
+    double dsdt = std::sqrt(xdot[0]*xdot[0] + xdot[1]*xdot[1]);
 
     // normal vector, pointintg inwards and normalised
     double nvec[] = {-xdot[1]/dsdt, xdot[0]/dsdt, 0.};
 
     // from segment mid-point to observer
     double rvec[] = {point[0] - pmid[0], point[1] - pmid[1]};
-    double r = sqrt(rvec[0]*rvec[0] + rvec[1]*rvec[1]);
+    double r = std::sqrt(rvec[0]*rvec[0] + rvec[1]*rvec[1]);
 
-    double kmod = sqrt(kvec[0]*kvec[0] + kvec[1]*kvec[1]);
+    double kmod = std::sqrt(kvec[0]*kvec[0] + kvec[1]*kvec[1]);
     double kr = kmod * r;
 
     // Green functions and normal derivatives
@@ -106,18 +115,19 @@ cincident (const double kvec[], const double point[], double* real_part, double*
 
 extern "C" void computeScatteredWave(const double kvec[], int nc, const double xc[], const double yc[], 
                                      const double point[], double* real_part, double* imag_part) {
-    double p0[2], p1[2];
-    std::complex<double> res(0., 0.);
-    // define basic data types for reduction, otherwise a user defined reduction operator needs to be defined
+    // Use primitive data types for the parallel reduction operation, to avoid having to define a
+    // custom OpenMP reduction for the "std::complex" data type
     double res_real=0., res_imag=0.;
-    // OpenMP defined parallel region (where threads are spawn), data clauses and reduction
-    #pragma omp parallel for private(p0,p1,res) reduction(+:res_real,res_imag)
+    // OpenMP pragma defines the parallel region (where threads are spawned), data clauses and reduction
+    // Variables that are defined inside the loop are automatically private
+    #pragma omp parallel for default(none) shared(nc,xc,yc,kvec,point) reduction(+:res_real,res_imag)
     for (int i = 0; i < nc - 1; ++i) {
-        p0[0] = xc[i]; p0[1] = yc[i];
-        p1[0] = xc[i + 1]; p1[1] = yc[i + 1];
-        // just use res as intermediate variable
-        res = computeScatteredWaveElement(kvec, p0, p1, point);
-        // use simple data types for reduction
+        double p0[] = {xc[i], yc[i]};
+        double p1[] = {xc[i + 1], yc[i + 1]};
+        // res is now just a helper variable and can be defined inside the loop
+        // We also need to be verify that "computeScatteredWaveElement" is thread-safe,
+        // as it will now run concurrently in multiple threads
+        std::complex<double> res = computeScatteredWaveElement(kvec, p0, p1, point);
         res_real += res.real();
         res_imag += res.imag();
     }

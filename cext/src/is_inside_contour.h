@@ -20,6 +20,6 @@
  * @return 1 if p is inside, 0 otherwise
  */
 extern "C" int
-isInsideContour(const double p[], int n, const double xc[], const double yc[], double tol);
+isInsideContour(const double p[], int n, const double xc[], const double yc[], const double tol);
 
 #endif // IS_INSIDE_CONTOUR_H
