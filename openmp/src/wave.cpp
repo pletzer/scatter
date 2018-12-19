@@ -4,12 +4,12 @@
 /**
  * Hankel_n^{(1)} function
  * 
- * @param  n index
+ * @param n index
  * @param x argument
  * @return value
  */
 std::complex<double>
-hankel1(int n, double x) {
+hankel1(const int n, const double x) {
     double besselJ = boost::math::cyl_bessel_j<int, double>(n, x);
     double besselY = boost::math::cyl_neumann<int, double>(n, x);
     return besselJ + J1*besselY;
@@ -61,16 +61,16 @@ computeScatteredWaveElement(const double kvec[], const double p0[],
     double pmid[] = {0.5*(p0[0] + p1[0]), 0.5*(p0[1] + p1[1])};
 
     // segment length
-    double dsdt = sqrt(xdot[0]*xdot[0] + xdot[1]*xdot[1]);
+    double dsdt = std::sqrt(xdot[0]*xdot[0] + xdot[1]*xdot[1]);
 
     // normal vector, pointintg inwards and normalised
     double nvec[] = {-xdot[1]/dsdt, xdot[0]/dsdt, 0.};
 
     // from segment mid-point to observer
     double rvec[] = {point[0] - pmid[0], point[1] - pmid[1]};
-    double r = sqrt(rvec[0]*rvec[0] + rvec[1]*rvec[1]);
+    double r = std::sqrt(rvec[0]*rvec[0] + rvec[1]*rvec[1]);
 
-    double kmod = sqrt(kvec[0]*kvec[0] + kvec[1]*kvec[1]);
+    double kmod = std::sqrt(kvec[0]*kvec[0] + kvec[1]*kvec[1]);
     double kr = kmod * r;
 
     // Green functions and normal derivatives
@@ -106,22 +106,16 @@ cincident (const double kvec[], const double point[], double* real_part, double*
 
 extern "C" void computeScatteredWave(const double kvec[], int nc, const double xc[], const double yc[], 
                                      const double point[], double* real_part, double* imag_part) {
-    double p0[2], p1[2];
     std::complex<double> res(0., 0.);
-    // define basic data types for reduction, otherwise a user defined reduction operator needs to be defined
-    double res_real=0., res_imag=0.;
-    // OpenMP pragma defined the pallel region (where threads are spawn), data clauses and reduction
-    #pragma omp parallel for private(p0,p1,res) reduction(+:res_real,res_imag)
+    // ADD OPENMP PRAGMA HERE
     for (int i = 0; i < nc - 1; ++i) {
-        p0[0] = xc[i]; p0[1] = yc[i];
-        p1[0] = xc[i + 1]; p1[1] = yc[i + 1];
-        // just use res as intermediate variable
-        res = computeScatteredWaveElement(kvec, p0, p1, point);
-        // use simple data types for reduction
-        res_real += res.real();
-        res_imag += res.imag();
+        double p0[] = {xc[i], yc[i]};
+        double p1[] = {xc[i + 1], yc[i + 1]};
+        // BUILT-IN OPENMP REDUCTIONS DO NOT SUPPORT "std::complex" DATA TYPE
+        // USE SEPARATE VARIABLES OF PRIMITIVE TYPE FOR REAL AND IMG PARTS
+        res += computeScatteredWaveElement(kvec, p0, p1, point);
     }
-    *real_part = res_real;
-    *imag_part = res_imag;
+    *real_part = res.real();
+    *imag_part = res.imag();
 }
 
