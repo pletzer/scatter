@@ -125,7 +125,7 @@ extern "C" void computeScatteredWave(const double kvec[], int nc, const double x
         double p0[] = {xc[i], yc[i]};
         double p1[] = {xc[i + 1], yc[i + 1]};
         // res is now just a helper variable and can be defined inside the loop
-        // We also need to be verify that "computeScatteredWaveElement" is thread-safe,
+        // We also need to verify that "computeScatteredWaveElement" is thread-safe,
         // as it will now run concurrently in multiple threads
         std::complex<double> res = computeScatteredWaveElement(kvec, p0, p1, point);
         res_real += res.real();
