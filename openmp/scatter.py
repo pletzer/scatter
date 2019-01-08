@@ -26,34 +26,14 @@ twoPi = 2. * numpy.pi
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
-def isInsideContour(p, xc, yc, tol=0.01):
-    """
-    Check if a point is inside closed contour by summing the 
-    the angles between point p, (xc[i], yc[i]) and (xc[i+1], yc[i+1]).
-    Point p is declared to be inside if the total angle amounts to 
-    2*pi.
-
-    @param p point (2d array)
-    @param xc array of x points, anticlockwise and must close
-    @param yc array of y points, anticlockwise and must close
-    @param tol tolerance
-    @return True if p is inside, False otherwise
-    """
-    tot = 0.0
-    for i0 in range(len(xc) - 1):
-        i1 = i0 + 1
-        a = numpy.array([xc[i0], yc[i0]]) - p[:2]
-        b = numpy.array([xc[i1], yc[i1]]) - p[:2]
-        tot += math.atan2(a[0]*b[1] - a[1]*b[0], a.dot(b))
-    tot /= twoPi
-    return (abs(tot) > tol)
-
 # contour points of the obstacle
 nc = args.nc
 nc1 = nc + 1
 t = numpy.linspace(0., 1., nc1)
 xc = eval(args.xContourExpr)
 yc = eval(args.yContourExpr)
+xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
 # create grid 
 nx, ny = args.nx, args.ny
@@ -95,6 +75,9 @@ wavelib.computeScatteredWave.argtypes = [doubleStarType,
                                          doubleStarType,
                                          doubleStarType]
 
+tol = 0.01
+tol_c = ctypes.c_double(tol)
+
 # compute the field
 scat = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
@@ -106,16 +89,14 @@ for j in range(ny + 1):
         # need to check that x,y are outside contour
         # otherwise continue
         p = numpy.array([x, y,])
+        pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
         # skip if point is inside closed contour
-        if isInsideContour(p, xc, yc):
+        if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr, tol_c) == 1:
             continue
 
         # get the pointers from the numpy arrays
         kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-        # declare prototype of cincident external C++ function 
 
         wavelib.cincident(kvecPtr, pPtr, ctypes.byref(realVal), ctypes.byref(imagVal))
         inci[j, i] = realVal.value + 1j*imagVal.value
