@@ -19,7 +19,7 @@ setup(
 		                           libraries=['boost_math_tr1'],
 		                           runtime_library_dirs = [boost_dir + '/lib'],
                                            extra_compile_args = ["-fopenmp"],
-                                           extra_link_args=['-lgomp'],
+                                           #extra_link_args=['-lgomp'],
 		               ),
                      ],
 )
