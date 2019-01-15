@@ -1,7 +1,7 @@
 import numpy
 import os
 import ctypes
-from numba import jit, cfunc
+from numba import jit #, cfunc
 
 PI = numpy.pi
 TWOPI = 2. * PI
