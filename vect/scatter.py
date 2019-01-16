@@ -38,12 +38,24 @@ def isInsideContour(p, xc, yc, tol=0.01):
     @param tol tolerance
     @return True if p is inside, False otherwise
     """
+
+    # number of segments
+    numSeg = len(xc) - 1
+
+    # vectors from point p to start point of segment
+    a = numpy.array([xc[:-1], yc[:-1]])
+    a[0, :] -= p[0]
+    a[1, :] -= p[1]
+
+    # vectors from point p to end point of segment
+    b = numpy.array([xc[1:], yc[1:]])
+    b[0, :] -= p[0]
+    b[1, :] -= p[1]
+
+    # sum of angles over all segments
     tot = 0.0
-    for i0 in range(len(xc) - 1):
-        i1 = i0 + 1
-        a = numpy.array([xc[i0], yc[i0]]) - p[:2]
-        b = numpy.array([xc[i1], yc[i1]]) - p[:2]
-        tot += math.atan2(a[0]*b[1] - a[1]*b[0], a.dot(b))
+    for i in range(numSeg):
+        tot += math.atan2(a[0, i]*b[1, i] - a[1, i]*b[0, i], a[0, i]*b[0, i] + a[1, i]*b[1, i])
     tot /= twoPi
     return (abs(tot) > tol)
 
