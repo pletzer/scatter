@@ -112,12 +112,13 @@ for indx in local_inds:
     # compute the incident and scattered field at point indexed indx
     inci[i0], scat[i0] = computeField(indx)
 
-# gather the total wave on the root process
+# sum of incident and sacetted waves
 localWave = inci + scat
+
+# gather local wave on processor root
 globalWave = comm.gather(localWave, root=root)
-# turn the list of arrays - saveData wants an array of size ny1 * nx1 
-# so flatten the array and then apply the reshape operator
 if pe == root:
+	# turns the list of arrays into a flat array, reshape to a 2d array
     globalWave = numpy.concatenate(globalWave).reshape((ny1, nx1))
 
 if args.checksum:
