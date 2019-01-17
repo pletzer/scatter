@@ -93,26 +93,23 @@ nprocs = comm.Get_size()
 root = nprocs - 1
 
 # total number of points 
-ntot = ny1 * nx1
+n_global = ny1 * nx1
 
-# number of points per process
-n = int(math.ceil(ntot / float(nprocs)))
+# get the list of indices local to this process
+local_inds = numpy.array_split(numpy.arange(0, n_global), nprocs)[pe]
 
-# get the start and one past end indices for each proc
-indxBeg = n * pe
-# last process acts as root and gets fewer points
-indxEnd = n*(pe + 1)
-if pe == root:
-    # take points as many as needed
-    indxEnd = ntot
+# number of wave solutions computed by this process
+nLocal = len(local_inds)
 
-nLocal = indxEnd - indxBeg
-
-# compute the field
+# allocate incident and scattered fields
 inci = numpy.zeros((nLocal,), numpy.complex64)
 scat = numpy.zeros((nLocal,), numpy.complex64)
-for indx in range(indxBeg, indxEnd):
-    i0 = indx - indxBeg
+
+# compute the field
+for indx in local_inds:
+	# i0 starts at 0
+    i0 = indx - local_inds[0]
+    # compute the incident and scattered field at point indexed indx
     inci[i0], scat[i0] = computeField(indx)
 
 # gather the total wave on the root process
