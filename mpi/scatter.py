@@ -93,26 +93,29 @@ nprocs = comm.Get_size()
 root = nprocs - 1
 
 # total number of points 
-ntot = ny1 * nx1
+n_global = ny1 * nx1
 
-# number of points per process
-n = int(math.ceil(ntot / float(nprocs)))
+# get the list of indices local to this process
+local_inds = numpy.array_split(numpy.arange(0, n_global), nprocs)[pe]
 
-# get the start and one past end indices for each proc
-indxBeg = n * pe
-# last process acts as root and gets fewer points
-indxEnd = min(ntot, n*(pe + 1))
+# number of wave solutions computed by this process
+nLocal = len(local_inds)
 
-# local number of points
-nLocal = indxEnd - indxBeg # can be smaller than n
+# allocate incident and scattered fields
+inci = numpy.zeros((nLocal,), numpy.complex64)
+scat = numpy.zeros((nLocal,), numpy.complex64)
 
-# IMPLEMENT FIELD COMPUTATION HERE
-# USE 1D FIELD ARRAYS AND CALL computeField
-# inci = incident field on local process
-# scat = scattered field on local process
-# ...
+# compute the field
+for indx in local_inds:
+	# i0 starts at 0
+    i0 = indx - local_inds[0]
+    # compute the incident and scattered field at point indexed indx
+    inci[i0], scat[i0] = computeField(indx)
+
+# sum of incident and sacetted waves
 localWave = inci + scat
-# GATHER localWave ON PROCESS ROOT
+
+# GATHER localWave ON PROCESS ROOT HERE
 # globalWave = is localWave gathered on pe == root
 
 if args.checksum:
