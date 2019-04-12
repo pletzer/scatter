@@ -53,9 +53,11 @@ def isInsideContour(p, xc, yc, tol=0.01):
     b[1, :] -= p[1]
 
     # sum of angles over all segments
+    # VECTORISE THE FOLLOWING FOUR LINES
     tot = 0.0
     for i in range(numSeg):
-        tot += math.atan2(a[0, i]*b[1, i] - a[1, i]*b[0, i], a[0, i]*b[0, i] + a[1, i]*b[1, i])
+        tot += numpy.arctan2(a[0, i]*b[1, i] - a[1, i]*b[0, i], \
+        	                 a[0, i]*b[0, i] + a[1, i]*b[1, i])
     tot /= twoPi
     return (abs(tot) > tol)
 
