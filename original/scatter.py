@@ -32,7 +32,6 @@ def isInsideContour(p, xc, yc):
     @param p point (2d array)
     @param xc array of x points, anticlockwise and must close
     @param yc array of y points, anticlockwise and must close
-    @param tol tolerance
     @return True if p is inside, False otherwise
     """
     inside = True
