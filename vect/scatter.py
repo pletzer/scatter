@@ -47,16 +47,10 @@ def isInsideContour(p, xc, yc):
     b = numpy.array([xc[1:], yc[1:]])
     b[0, :] -= p[0]
     b[1, :] -= p[1]
-
-    # sum of angles over all segments
-    # VECTORISE THE FOLLOWING LINES
-    inside = True
-    for i in range(numSeg):
-        # point is outside if any of the triangle extending from the point to the segment
-        # has negative area (cross product < 0)
-        # count a point on the contour as being outside (cross product == 0)
-        inside &= (a[0, i]*b[1, i] - a[1, i]*b[0, i] > 1.e-10)
-    return inside
+    areas = a[0, :]*b[1, :] - a[1, :]*b[0, :]
+   
+    # return True if all the areas are positive
+    return not numpy.any(areas < 1.e-10)
 
 # contour points of the obstacle
 t = numpy.linspace(0., 1., args.nc + 1)
