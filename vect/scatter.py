@@ -48,7 +48,6 @@ def isInsideContour(p, xc, yc):
     b[0, :] -= p[0]
     b[1, :] -= p[1]
 
-    # sum of angles over all segments
     # VECTORISE THE FOLLOWING LINES
     inside = True
     for i in range(numSeg):
@@ -56,6 +55,7 @@ def isInsideContour(p, xc, yc):
         # has negative area (cross product < 0)
         # count a point on the contour as being outside (cross product == 0)
         inside &= (a[0, i]*b[1, i] - a[1, i]*b[0, i] > 1.e-10)
+    
     return inside
 
 # contour points of the obstacle
