@@ -26,27 +26,25 @@ twoPi = 2. * numpy.pi
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
-def isInsideContour(p, xc, yc, tol=0.01):
+def isInsideContour(p, xc, yc):
     """
-    Check if a point is inside closed contour by summing the 
-    the angles between point p, (xc[i], yc[i]) and (xc[i+1], yc[i+1]).
-    Point p is declared to be inside if the total angle amounts to 
-    2*pi.
+    Check if a point is inside closed contour
 
     @param p point (2d array)
     @param xc array of x points, anticlockwise and must close
     @param yc array of y points, anticlockwise and must close
-    @param tol tolerance
     @return True if p is inside, False otherwise
     """
-    tot = 0.0
+    inside = True
     for i0 in range(len(xc) - 1):
         i1 = i0 + 1
         a = numpy.array([xc[i0], yc[i0]]) - p[:2]
         b = numpy.array([xc[i1], yc[i1]]) - p[:2]
-        tot += math.atan2(a[0]*b[1] - a[1]*b[0], a.dot(b))
-    tot /= twoPi
-    return (abs(tot) > tol)
+        # point is outside if any of the triangle extending from the point to the segment
+        # has negative area (cross product < 0)
+        # count a point on the contour as being outside (cross product == 0)
+        inside &= (a[0]*b[1] - a[1]*b[0] > 1.e-10)
+    return inside
 
 # contour points of the obstacle
 nc = args.nc

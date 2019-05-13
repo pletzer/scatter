@@ -14,9 +14,9 @@ setup(
 	license='BSD',
 	scripts=['scatter.py'],
 	ext_modules=[Extension('wave', ['src/wave.cpp'], 
-		                           include_dirs=[boost_dir + '/include'],
-		                           library_dirs=[boost_dir + '/lib'],
-		                           libraries=['boost_math_tr1'],
-		                           runtime_library_dirs = [boost_dir + '/lib'],
+	                           include_dirs=[boost_dir + '/include'],
+	                           library_dirs=[boost_dir + '/lib'],
+	                           libraries=['boost_math_tr1'],
+	                           runtime_library_dirs = [boost_dir + '/lib'],
 		                   )],
 )
