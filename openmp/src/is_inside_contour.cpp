@@ -4,6 +4,8 @@ extern "C" int
 isInsideContour(const double p[], int n,
                 const double xc[], const double yc[]) {
     
+    // find the minimum area between the point and the segment. If any
+    // area is negative then the point is outside the contour
     double inside = 1.;
     #pragma omp parallel for default(none) shared(n,xc,yc,p) reduction(min:inside)
     for (int i0 = 0; i0 < n - 1; ++i0) {
