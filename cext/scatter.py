@@ -92,7 +92,7 @@ for j in range(ny + 1):
         pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
         # skip if point is inside closed contour
-        if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr, tol_c) == 1:
+        if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr) == 1:
             continue
 
         # get the pointers from the numpy arrays

@@ -1,7 +1,7 @@
 import numpy
 import os
 import ctypes
-from numba import jit #, cfunc
+from numba import jit
 
 PI = numpy.pi
 TWOPI = 2. * PI
@@ -34,16 +34,13 @@ c_y1 = lib.y1
 c_y1.restype = ctypes.c_double
 c_y1.argtypes = [ctypes.c_double]
 
-
 @jit(nopython=True)
 def hankel1_0(x):
     return c_j0(x) + 1j* c_y0(x)
 
-
 @jit(nopython=True)
 def hankel1_1(x):
     return c_j1(x) + 1j* c_y1(x)
-
 
 @jit(nopython=True)
 def incident(kvec, point):

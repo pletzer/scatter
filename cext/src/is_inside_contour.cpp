@@ -2,15 +2,14 @@
 
 extern "C" int
 isInsideContour(const double p[], int n,
-                const double xc[], const double yc[], const double tol) {
+                const double xc[], const double yc[]) {
     
-    double tot = 0.0;
+    bool inside = true;
     for (int i0 = 0; i0 < n - 1; ++i0) {
         int i1 = i0 + 1;
         double a[] = {xc[i0] - p[0], yc[i0] - p[1]};
         double b[] = {xc[i1] - p[0], yc[i1] - p[1]};
-        tot += std::atan2(a[0]*b[1] - a[1]*b[0], a[0]*b[0] + a[1]*b[1]);
+        inside &= (a[0]*b[1] - a[1]*b[0] > 1.e-10);
     }
-    tot /= TWOPI;
-    return std::abs(tot) > tol ? 1 : 0;
+    return (inside? 1: 0);
 }
