@@ -29,7 +29,7 @@ nproc = int(os.environ.get('OMP_NUM_THREADS', '1'))
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
-def isInsideContour(p, xc, ycss):
+def isInsideContour(p, xc, yc):
     """
     Check if a point is inside closed contour
 
@@ -59,6 +59,7 @@ ny1, nx1 = ny + 1, nx + 1
 xg = numpy.linspace(xmin, xmax, nx1)
 yg = numpy.linspace(ymin, ymax, ny1)
 
+
 def computeField(k):
 
     # get the i j indices
@@ -80,8 +81,9 @@ def computeField(k):
         scat_val = wave.computeScatteredWave(kvec, xc, yc, p)
         return (inci_val, scat_val)
 
-# change the following for parallel execution
-res = [computeField(k) for k in range(ny1 * nx1)]
+# parallel processing
+pool = multiprocessing.Pool(processes=nproc)
+res = pool.map(computeField, list(range(ny1 * nx1)))
 
 # compute the field
 inci = numpy.array([r[0] for r in res], numpy.complex64).reshape((ny1, nx1))
