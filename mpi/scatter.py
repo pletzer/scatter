@@ -110,10 +110,11 @@ for indx in local_inds:
 # sum of incident and sacetted waves
 localWave = inci + scat
 
-# TO DO gather local wave on processor root
-# Hit: comm.gather returns a list of 1d arrays on process root, use 
-# numpy.concatenate to turn this into a flat array. Then reshape the 
-# array into a ny1 times nx1 array
+# gather local wave on processor root
+globalWave = comm.gather(localWave, root=root)
+if pe == root:
+    # turns the list of arrays into a flat array, reshape to a 2d array
+    globalWave = numpy.concatenate(globalWave).reshape((ny1, nx1))
 
 if args.checksum:
     localSum = (scat*numpy.conj(scat)).sum()

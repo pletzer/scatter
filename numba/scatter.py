@@ -5,6 +5,7 @@ from numpy import cos, sin, pi
 import math
 import saveVtk
 import wave
+from numba import jit
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
@@ -25,6 +26,7 @@ twoPi = 2. * numpy.pi
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
+@jit(nopython=True)
 def isInsideContour(p, xc, yc):
     """
     Check if a point is inside closed contour
@@ -58,6 +60,7 @@ ny1, nx1 = ny + 1, nx + 1
 xg = numpy.linspace(xmin, xmax, nx1)
 yg = numpy.linspace(ymin, ymax, ny1)
 
+@jit(nopython=True)
 def computeField(flatIndx):
     """
     Compute the incident and scatted fields

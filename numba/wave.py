@@ -1,6 +1,7 @@
 import numpy
 import os
 import ctypes
+from numba import jit
 
 PI = numpy.pi
 TWOPI = 2. * PI
@@ -33,15 +34,15 @@ c_y1 = lib.y1
 c_y1.restype = ctypes.c_double
 c_y1.argtypes = [ctypes.c_double]
 
-
+@jit(nopython=True)
 def hankel1_0(x):
     return c_j0(x) + 1j* c_y0(x)
 
-
+@jit(nopython=True)
 def hankel1_1(x):
     return c_j1(x) + 1j* c_y1(x)
 
-
+@jit(nopython=True)
 def incident(kvec, point):
     """
     Incident wave
@@ -52,6 +53,7 @@ def incident(kvec, point):
     """
     return numpy.exp(1j*numpy.dot(kvec, point))
 
+@jit(nopython=True)
 def gradIncident(nvec, kvec, point):
     """
     Normal gradient of the incident wave, assumes incident wave is exp(1j * kvec.x)
@@ -63,6 +65,7 @@ def gradIncident(nvec, kvec, point):
     """
     return 1j*numpy.dot(nvec, kvec)*incident(kvec, point)
 
+@jit(nopython=True)
 def computeScatteredWaveElement(kvec, p0, p1, point):
     """
     Scattered wave contribution from a single segment
@@ -112,6 +115,7 @@ def computeScatteredWaveElement(kvec, p0, p1, point):
 
     return scattered_wave
 
+@jit(nopython=True)
 def computeScatteredWave(kvec, xc, yc, point):
     """
     Total scattered wave response, summing up 
