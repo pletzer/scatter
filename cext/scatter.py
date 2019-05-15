@@ -75,9 +75,6 @@ wavelib.computeScatteredWave.argtypes = [doubleStarType,
                                          doubleStarType,
                                          doubleStarType]
 
-tol = 0.01
-tol_c = ctypes.c_double(tol)
-
 # compute the field
 scat = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
