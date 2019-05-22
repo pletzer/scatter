@@ -25,6 +25,7 @@ twoPi = 2. * numpy.pi
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
+@profile
 def isInsideContour(p, xc, yc):
     """
     Check if a point is inside closed contour
