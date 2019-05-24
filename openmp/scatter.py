@@ -87,8 +87,7 @@ for j in range(ny + 1):
 
         # need to check that x,y are outside contour
         # otherwise continue
-        p = numpy.array([x, y,])
-        pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        pPtr = (ctypes.c_double * 2)(x, y)
 
         # skip if point is inside closed contour
         if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr) == 1:
