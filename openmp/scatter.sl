@@ -5,9 +5,9 @@
 #SBATCH --output=scatter-%j.output
 #SBATCH --time=00:10:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
 
-ml Python Boost
+ml Python Boost forge
 python setup.py build --force
-srun time python scatter.py -c
+srun map --profile python scatter.py -nx 256 -ny 256

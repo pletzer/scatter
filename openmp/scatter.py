@@ -25,6 +25,8 @@ twoPi = 2. * numpy.pi
 # incident wavenumber
 knum = 2 * numpy.pi / args.lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
+# get the pointers from the numpy arrays
+kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
 # contour points of the obstacle
 nc = args.nc
@@ -92,14 +94,8 @@ for j in range(ny + 1):
         if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr) == 1:
             continue
 
-        # get the pointers from the numpy arrays
-        kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
         wavelib.cincident(kvecPtr, pPtr, ctypes.byref(realVal), ctypes.byref(imagVal))
         inci[j, i] = realVal.value + 1j*imagVal.value
-
-        xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
         wavelib.computeScatteredWave(kvecPtr, nc1, xcPtr, ycPtr, pPtr, 
                                      ctypes.byref(realVal), ctypes.byref(imagVal))
