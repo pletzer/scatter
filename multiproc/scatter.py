@@ -7,6 +7,8 @@ import saveVtk
 import wave
 import multiprocessing
 import os
+import functools
+import operator
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
@@ -24,6 +26,7 @@ args = parser.parse_args()
 twoPi = 2. * numpy.pi
 # get the number of threads from the environment variable OMP_NUM_THREADS
 nproc = int(os.environ.get('OMP_NUM_THREADS', '1'))
+print('Number of processes: {}'.format(nproc))
 
 # incident wavenumber
 knum = 2 * numpy.pi / args.lmbda
@@ -59,34 +62,40 @@ ny1, nx1 = ny + 1, nx + 1
 xg = numpy.linspace(xmin, xmax, nx1)
 yg = numpy.linspace(ymin, ymax, ny1)
 
-def computeField(k):
+def computeField(procId):
 
-    # get the i j indices
-    j = k // nx1
-    i = k % nx1
+    # allocate arrays for incident and scattered waves
+    inciProc = numpy.zeros((ny1, nx1), numpy.complex64)
+    scatProc = numpy.zeros((ny1, nx1), numpy.complex64)
 
-    # get the point
-    x, y = xg[i], yg[j]
+    for k in range(procId, nx1 * ny1, nproc):
 
-    # need to check that x,y are outside contour
-    # otherwise continue
-    p = numpy.array([x, y,])
+        # get the i j indices
+        j = k // nx1
+        i = k % nx1
 
-    # skip if point is inside closed contour
-    if isInsideContour(p, xc, yc):
-        return (0j, 0j)
-    else:
-        inci_val = wave.incident(kvec, p)
-        scat_val = wave.computeScatteredWave(kvec, xc, yc, p)
-        return (inci_val, scat_val)
+        # get the point
+        x, y = xg[i], yg[j]
+
+        # need to check that x,y are outside contour
+        # otherwise continue
+        p = numpy.array([x, y,])
+
+        # skip if point is inside closed contour
+        if not isInsideContour(p, xc, yc):
+            # compute the incident and scattered wave components
+            inciProc[j, i] += wave.incident(kvec, p)
+            scatProc[j, i] += wave.computeScatteredWave(kvec, xc, yc, p)
+
+    return (inciProc, scatProc)
 
 # parallel processing
 pool = multiprocessing.Pool(processes=nproc)
-res = pool.map(computeField, list(range(ny1 * nx1)))
+res = pool.map(computeField, range(nproc))
 
-# compute the field
-inci = numpy.array([r[0] for r in res], numpy.complex64).reshape((ny1, nx1))
-scat = numpy.array([r[1] for r in res], numpy.complex64).reshape((ny1, nx1))
+# add the contributions from all processes
+inci = functools.reduce(operator.add, [r[0] for r in res])
+scat = functools.reduce(operator.add, [r[1] for r in res])
 
 
 if args.checksum:
