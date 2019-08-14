@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
-ml Python Boost
+module load Python Boost
 srun time python -m cProfile -o output.pstats scatter.py
 gprof2dot --colour-nodes-by-selftime -f pstats output.pstats | \
     dot -Tpng -o output.png

@@ -7,6 +7,6 @@
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
 
-ml Python Boost
-ml forge
+module load Python Boost
+module load forge
 map --profile srun python scatter.py

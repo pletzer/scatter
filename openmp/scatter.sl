@@ -8,6 +8,6 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --hint=nomultithread
 
-ml Python Boost
+module load Python Boost
 python setup.py build --force
 srun time python scatter.py -c
