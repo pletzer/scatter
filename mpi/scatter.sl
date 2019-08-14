@@ -7,5 +7,5 @@
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
 
-ml Python Boost
+module load Python Boost
 srun time python scatter.py -c

@@ -8,6 +8,6 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
 
-ml Python Boost forge
+module load Python Boost forge
 python setup.py build --force
 srun map --profile python scatter.py -nx 256 -ny 256
