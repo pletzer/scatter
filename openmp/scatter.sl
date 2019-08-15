@@ -8,15 +8,9 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --hint=nomultithread
 
-# load modules according to host
-host=$(echo $(hostname) | awk -F. '{print $1}')
-if [[ $host =~ *mauivlab.* ]]; then
-    # maui_ancil
-    module load Anaconda3 Boost
-else
-    # default is mahuika
-    module load Python Boost
-fi
+module load Python >& /dev/null    # mahuika, ignore elsewhere
+module load Anaconda3 >& /dev/null # maui, ignore elsewhere
+module load Boost
 
 python setup.py build --force
 
