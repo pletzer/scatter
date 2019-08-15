@@ -16,6 +16,5 @@ else
     # default is mahuika
     module load Python Boost
 fi
-
 # run the code
 srun time python scatter.py -checksum
