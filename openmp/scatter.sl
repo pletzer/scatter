@@ -10,4 +10,4 @@
 
 module load Python Boost
 python setup.py build --force
-srun python scatter.py -c -nx 256 -ny 256
+srun python scatter.py -checksum -nx 256 -ny 256

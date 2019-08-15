@@ -8,4 +8,4 @@
 #SBATCH --cpus-per-task=1
 
 module load Python Boost
-srun time python scatter.py -c
+srun time python scatter.py -checksum

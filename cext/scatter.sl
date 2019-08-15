@@ -10,4 +10,4 @@
 
 module load Python Boost
 python setup.py build --force
-srun time python scatter.py -c
+srun time python scatter.py -checksum
