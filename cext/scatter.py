@@ -71,7 +71,8 @@ for root, dirs, files in os.walk('build/'):
 wavelib = ctypes.CDLL(waveLibFile)
 
 # create some types for calling C++
-doubleStarType = ctypes.POINTER(ctypes.c_double) 
+doubleArr = numpy.ctypeslib.ndpointer(dtype=numpy.float64)
+doubleStr = ctypes.POINTER(ctypes.c_double)
 
 # containers to receive the output values of the C function
 realVal, imagVal = ctypes.c_double(0.), ctypes.c_double(0.)
@@ -79,19 +80,19 @@ realVal, imagVal = ctypes.c_double(0.), ctypes.c_double(0.)
 # returns void
 wavelib.cincident.restype = None
 # double*, double*, double*, double*
-wavelib.cincident.argtypes = [doubleStarType, doubleStarType, 
-                              doubleStarType, doubleStarType]
+wavelib.cincident.argtypes = [doubleArr, doubleArr, 
+                              doubleStr, doubleStr]
 
 # returns void
 wavelib.computeScatteredWave.restype = None
-# double*, int, double*, double*, double*, double*, double* 
-wavelib.computeScatteredWave.argtypes = [doubleStarType,
+# double[], int, double[], double[], double[], double*, double* 
+wavelib.computeScatteredWave.argtypes = [doubleArr,
                                          ctypes.c_int, 
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType]
+                                         doubleArr,
+                                         doubleArr,
+                                         doubleArr,
+                                         doubleStr,
+                                         doubleStr]
 
 # compute the field
 scat = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
@@ -109,19 +110,10 @@ for j in range(ny + 1):
         if isInsideContour(p, xc, yc):
             continue
 
-        # get the pointers from the numpy arrays
-        kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-        # declare prototype of cincident external C++ function 
-
-        wavelib.cincident(kvecPtr, pPtr, ctypes.byref(realVal), ctypes.byref(imagVal))
+        wavelib.cincident(kvec, p, ctypes.byref(realVal), ctypes.byref(imagVal))
         inci[j, i] = realVal.value + 1j*imagVal.value
 
-        xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-        wavelib.computeScatteredWave(kvecPtr, nc1, xcPtr, ycPtr, pPtr, 
+        wavelib.computeScatteredWave(kvec, nc1, xc, yc, p, 
                                      ctypes.byref(realVal), ctypes.byref(imagVal))
         scat[j, i] = realVal.value + 1j*imagVal.value
 
