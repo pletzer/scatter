@@ -7,8 +7,5 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
-module load Python >& /dev/null    # mahuika, ignore elsewhere
-module load Anaconda3 >& /dev/null # maui, ignore elsewhere
-module load Boost
 
 srun time python scatter.py -checksum
