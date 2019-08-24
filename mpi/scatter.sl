@@ -7,7 +7,5 @@
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
 
-module load Python # mahuika
-module load Boost
 
 srun time python scatter.py -checksum
