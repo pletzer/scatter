@@ -8,9 +8,6 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --hint=nomultithread
 
-module load Python >& /dev/null    # mahuika, ignore elsewhere
-module load Anaconda3 >& /dev/null # maui, ignore elsewhere
-module load Boost
 
 python setup.py build --force
 
