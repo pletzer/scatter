@@ -7,9 +7,6 @@
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
 
-module load Python    # mahuika
-module load Boost
 
-module load forge
 
 map --profile srun python scatter.py
