@@ -1,0 +1,7 @@
+@software{scatter-0.9.0,
+  author = {{Alexander Pletzer and Mandes Sch\"{o}nherr and Chris Scott and Wolfgang Hayek}},
+  title = {Scatter: a wave scattering program implemented in many different ways},
+  url = {https://githib.com/pletzer/scatter},
+  version = {0.9.0},
+  date = {2019-08-27},
+}
