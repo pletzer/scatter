@@ -11,4 +11,4 @@
 
 python setup.py build --force
 
-srun python scatter.py -checksum -nx 256 -ny 256 -nc 1024
+srun map --profile python scatter.py -checksum -nx 256 -ny 256 -nc 1024
