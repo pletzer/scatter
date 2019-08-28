@@ -106,16 +106,17 @@ cincident (const double kvec[], const double point[], double* real_part, double*
 
 extern "C" void computeScatteredWave(const double kvec[], int nc, const double xc[], const double yc[], 
                                      const double point[], double* real_part, double* imag_part) {
-    std::complex<double> res(0., 0.);
+    double res_real = 0;
+    double res_imag = 0;
     // ADD OPENMP PRAGMA HERE
     for (int i = 0; i < nc - 1; ++i) {
         double p0[] = {xc[i], yc[i]};
         double p1[] = {xc[i + 1], yc[i + 1]};
-        // BUILT-IN OPENMP REDUCTIONS DO NOT SUPPORT "std::complex" DATA TYPE
-        // USE SEPARATE VARIABLES OF PRIMITIVE TYPE FOR REAL AND IMG PARTS
-        res += computeScatteredWaveElement(kvec, p0, p1, point);
+        std::complex<double> res = computeScatteredWaveElement(kvec, p0, p1, point);
+        res_real += res.real();
+        res_imag += res.imag();
     }
-    *real_part = res.real();
-    *imag_part = res.imag();
+    *real_part = res_real;
+    *imag_part = res_imag;
 }
 
