@@ -29,10 +29,15 @@ This program shows how a Python code can be modified to run faster using various
 
 The directories below 
 ```
-|/'
+|-\
    |-original
    |-vect
+   |-numba
    |-cext
+   |-multiproc
+   |-mpi
+   |-openmp
+
 ```
 contain different versions of the scatter code, all producing the same result but each having 
 a different implementation. For instance `vect` has a vectorised implementation and `cext` 
