@@ -12,4 +12,5 @@
 rm -rf build
 python setup.py build --force
 
-srun time python scatter.py -checksum
+module load forge
+srun map --profile python scatter.py -checksum
