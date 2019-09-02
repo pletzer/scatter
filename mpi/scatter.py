@@ -102,7 +102,7 @@ scat = numpy.zeros((nLocal,), numpy.complex64)
 
 # compute the field
 for indx in local_inds:
-	# i0 starts at 0
+    # i0 starts at 0
     i0 = indx - local_inds[0]
     # compute the incident and scattered field at point indexed indx
     inci[i0], scat[i0] = computeField(indx)
