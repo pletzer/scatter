@@ -8,4 +8,4 @@
 #SBATCH --cpus-per-task=1
 
 
-srun map --profile python scatter.py -checksum
+srun time python scatter.py -checksum
