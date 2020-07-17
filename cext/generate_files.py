@@ -6,6 +6,7 @@ import math
 import os
 import ctypes
 import wave
+import multiprocessing
 
 random.seed(123)
 
@@ -13,13 +14,17 @@ random.seed(123)
 n = 10
 
 # wavelength
-lmbda = 0.2234
+lmbda = 0.1234
+
+# centre of object
+xcmin, xcmax = 1.0, 3.0
+ycmin, ycmax = -1.0, 1.4
 
 # radius
-amin, amax = 0.1, 1.2
+amin, amax = 0.1, 0.8
 
 # elongation
-kmin, kmax = 0.1, 2.3
+kmin, kmax = 0.4, 1.8
 
 # triangularity
 dmin, dmax = 0., 0.9
@@ -35,12 +40,14 @@ t = numpy.linspace(0., 1., nc1)
 # grid
 nx = 127
 ny = 127
-xmin, xmax = -5., +3.
+xmin, xmax = -10., 0.
 ymin, ymax = -5., 5.
 xg = numpy.linspace(xmin, xmax, nx + 1)
 yg = numpy.linspace(ymin, ymax, ny + 1)
 
 dic_data = {
+    'xc': [],
+    'yc': [],
     'a': [],
     'k': [],
     'd': [],
@@ -92,12 +99,16 @@ inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 
 for it in range(n):
 
+    xc = xcmin + (xcmax - xcmin)**random.random()
+    yc = ycmin + (ycmax - ycmin)**random.random()
     a = amin + (amax - amin)*random.random()
     k = kmin + (kmax - kmin)*random.random()
     d = dmin + (dmax - dmin)*random.random()
     phase = pmin + (pmax - pmin)*random.random()
 
-    print(f'iter = {it:06d} a = {a:6.4f} k = {k:6.4f} d = {d:6.4f} phase = {phase:6.3f}')
+    print(f'iter = {it:06d} xc,yc = {xc:6.4f},{yc:6.4f} a = {a:6.4f} k = {k:6.4f} d = {d:6.4f} phase = {phase:6.3f}')
+    dic_data['xc'].append(xc)
+    dic_data['yc'].append(yc)
     dic_data['a'].append(a)
     dic_data['k'].append(k)
     dic_data['d'].append(d)
@@ -145,7 +156,7 @@ for it in range(n):
     numpy.save(f'scatter_{it:05d}.npy', data)
 
 # create dataframe
-for key in 'a', 'k', 'd', 'phase':
+for key in 'xc', 'yc', 'a', 'k', 'd', 'phase':
     dic_data[key] = numpy.array(dic_data[key], numpy.float32)
 dic_data['id'] = numpy.array(dic_data['id'], numpy.int32)
 df = pandas.DataFrame(dic_data)
