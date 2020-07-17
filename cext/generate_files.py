@@ -8,6 +8,61 @@ import ctypes
 import wave
 import multiprocessing
 
+def computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc):
+    """
+    Compute the scattered field
+
+    @param xg 1-d array of x grid points
+    @param yg 1-d array of y grid points
+    @param wavelib ctypes CDLL handle to the C library
+    @param kvec wave vector
+    @param inci incident wave, array of size ny1, nx1
+    @param xc x values of the object's contour
+    @param yc y values of the object's contour
+    @return array of size ny1, nx1
+    """
+    ny1, nx1 = inci.shape
+    p = numpy.array([0., 0.,])
+    pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+    # get the pointers from the numpy arrays
+    kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+    # containers to receive the output values of the C function
+    realVal, imagVal = ctypes.c_double(0.), ctypes.c_double(0.)
+
+    xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
+    nc1 = len(xc)
+
+    scat = numpy.zeros((ny1, nx1), numpy.complex64)
+
+    for j in range(ny1):
+
+        y = yg[j]
+        for i in range(nx1):
+
+            x = xg[i]
+
+            p[:] = x, y
+
+            # always outside, no need to check...
+            # skip if point is inside closed contour
+            #if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr) == 1:
+            #    continue
+
+            wavelib.cincident(kvecPtr, pPtr, ctypes.byref(realVal), ctypes.byref(imagVal))
+            inci[j, i] = realVal.value + 1j*imagVal.value
+
+            wavelib.computeScatteredWave(kvecPtr, nc1, xcPtr, ycPtr, pPtr, 
+                                         ctypes.byref(realVal), ctypes.byref(imagVal))
+
+            scat[j, i] = realVal.value + 1j*imagVal.value
+
+    return scat
+
+
 random.seed(123)
 
 # number of cases/files
@@ -46,8 +101,8 @@ xg = numpy.linspace(xmin, xmax, nx + 1)
 yg = numpy.linspace(ymin, ymax, ny + 1)
 
 dic_data = {
-    'xc': [],
-    'yc': [],
+    'xcentre': [],
+    'ycentre': [],
     'a': [],
     'k': [],
     'd': [],
@@ -72,10 +127,6 @@ wavelib = ctypes.CDLL(waveLibFile)
 # create some types for calling C++
 doubleStarType = ctypes.POINTER(ctypes.c_double) 
 
-# containers to receive the output values of the C function
-realVal, imagVal = ctypes.c_double(0.), ctypes.c_double(0.)
-
-
 # returns void
 wavelib.cincident.restype = None
 # double*, double*, double*, double*
@@ -94,61 +145,30 @@ wavelib.computeScatteredWave.argtypes = [doubleStarType,
                                          doubleStarType]
 
 # field
-scat = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 
 for it in range(n):
 
-    xc = xcmin + (xcmax - xcmin)**random.random()
-    yc = ycmin + (ycmax - ycmin)**random.random()
+    xcentre = xcmin + (xcmax - xcmin)**random.random()
+    ycentre = ycmin + (ycmax - ycmin)**random.random()
     a = amin + (amax - amin)*random.random()
     k = kmin + (kmax - kmin)*random.random()
     d = dmin + (dmax - dmin)*random.random()
     phase = pmin + (pmax - pmin)*random.random()
 
-    print(f'iter = {it:06d} xc,yc = {xc:6.4f},{yc:6.4f} a = {a:6.4f} k = {k:6.4f} d = {d:6.4f} phase = {phase:6.3f}')
-    dic_data['xc'].append(xc)
-    dic_data['yc'].append(yc)
+    print(f'iter = {it:06d} xcentre,ycentre = {xcentre:6.4f},{ycentre:6.4f} a = {a:6.4f} k = {k:6.4f} d = {d:6.4f} phase = {phase:6.3f}')
+    dic_data['xcentre'].append(xcentre)
+    dic_data['ycentre'].append(ycentre)
     dic_data['a'].append(a)
     dic_data['k'].append(k)
     dic_data['d'].append(d)
     dic_data['phase'].append(phase)
     dic_data['id'].append(it)
 
-    xc = eval(f'{a}*cos(2*pi*(t - {phase}))')
-    yc = eval(f'{a}*{k}*sin(2*pi*(t - {phase}) - {d}*sin(2*pi*(t - {phase})))')
-    xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    xc = eval(f'{a}*cos(2*pi*(t - {phase})) + {xcentre}')
+    yc = eval(f'{a}*{k}*sin(2*pi*(t - {phase}) - {d}*sin(2*pi*(t - {phase}))) + {ycentre}')
 
-
-    # compute the field
-    for j in range(ny + 1):
-        y = yg[j]
-        for i in range(nx + 1):
-            x = xg[i]
-
-            # need to check that x,y are outside contour
-            # otherwise continue
-            p = numpy.array([x, y,])
-            pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-            # skip if point is inside closed contour
-            if wavelib.isInsideContour(pPtr, nc1, xcPtr, ycPtr) == 1:
-                continue
-
-            # get the pointers from the numpy arrays
-            kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-            wavelib.cincident(kvecPtr, pPtr, ctypes.byref(realVal), ctypes.byref(imagVal))
-            inci[j, i] = realVal.value + 1j*imagVal.value
-
-            xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-            ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-
-            wavelib.computeScatteredWave(kvecPtr, nc1, xcPtr, ycPtr, pPtr, 
-                                         ctypes.byref(realVal), ctypes.byref(imagVal))
-            scat[j, i] = realVal.value + 1j*imagVal.value
-
+    scat = computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc)
 
     # random wave phase
     OmegaTime = 0. + (2*pi - 0.)*random.random()
@@ -156,7 +176,7 @@ for it in range(n):
     numpy.save(f'scatter_{it:05d}.npy', data)
 
 # create dataframe
-for key in 'xc', 'yc', 'a', 'k', 'd', 'phase':
+for key in 'xcentre', 'ycentre', 'a', 'k', 'd', 'phase':
     dic_data[key] = numpy.array(dic_data[key], numpy.float32)
 dic_data['id'] = numpy.array(dic_data['id'], numpy.int32)
 df = pandas.DataFrame(dic_data)
