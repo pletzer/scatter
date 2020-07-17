@@ -10,12 +10,16 @@ import wave
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')
+parser.add_argument('-xmin', dest='xmin', type=float, default=-5.0, help='min x value of domain')
+parser.add_argument('-xmax', dest='xmax', type=float, default=+3.0, help='max x value of domain')
+parser.add_argument('-ymin', dest='ymin', type=float, default=-5.0, help='min y value of domain')
+parser.add_argument('-ymax', dest='ymax', type=float, default=+3.0, help='min y value of domain')
 parser.add_argument('-nx', dest='nx', type=int, default=128, help='number of x cells')
 parser.add_argument('-ny', dest='ny', type=int, default=128, help='number of y cells')
 parser.add_argument('-nc', dest='nc', type=int, default=128, help='number of contour segments')
 parser.add_argument('-xc', dest='xContourExpr', type=str, default='cos(2*pi*t + 0.5*sin(2*pi*t + 0.9))', help='x contour expression of 0 <= t <= 1')
 parser.add_argument('-yc', dest='yContourExpr', type=str, default='sin(2*pi*t)', help='y contour expression of 0 <= t <= 1')
-parser.add_argument('-save', dest='save', action='store_true', help='save time varying solution in VTK files')
+parser.add_argument('-save', dest='save_numit', type=int, help='save time varying solution in numpy files')
 parser.add_argument('-checksum', dest='checksum', action='store_true', help='compute and print a checksum of the scattered wave')
 
 args = parser.parse_args()
@@ -37,10 +41,8 @@ ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
 # create grid 
 nx, ny = args.nx, args.ny
-xmin, xmax = xc.min() - 5*args.lmbda, xc.max() + 3*args.lmbda
-ymin, ymax = yc.min() - 3*args.lmbda, yc.max() + 4*args.lmbda
-xg = numpy.linspace(xmin, xmax, nx + 1)
-yg = numpy.linspace(ymin, ymax, ny + 1)
+xg = numpy.linspace(args.xmin, args.xmax, nx + 1)
+yg = numpy.linspace(args.ymin, args.ymax, ny + 1)
 
 # find the library under the build directory
 waveLibFile = ''
@@ -108,10 +110,9 @@ for j in range(ny + 1):
 if args.checksum:
     print('Sum of scattered field |amplitudes|^2: {}'.format((scat*numpy.conj(scat)).sum().real))
 
-if args.save:
+if args.save_numit:
     # number of time frames
-    nanim = 20
-    dOmegaTime = twoPi / float(nanim)
-    for it in range(nanim):
+    dOmegaTime = twoPi / float(args.save_numit)
+    for it in range(args.save_numit):
         data = numpy.real(numpy.exp(-1j*it*dOmegaTime) * (scat + inci))
-        saveVtk.saveData('scatter_{}.vtk'.format(it), xg, yg, data, 'total')
+        numpy.save(f'scatter_{it:05d}.npy', data)
