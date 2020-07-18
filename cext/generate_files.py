@@ -6,9 +6,8 @@ import math
 import os
 import ctypes
 import wave
-import multiprocessing
 
-def computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc):
+def computeScatteredField(xg, yg, wavelib, kvec, inci, xcfun, ycfun):
     """
     Compute the scattered field
 
@@ -25,14 +24,23 @@ def computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc):
     p = numpy.array([0., 0.,])
     pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
+    # number of contour points 
+    nc = 128
+    nc1 = nc + 1
+    t = numpy.linspace(0., 1., nc1)
+
+    # contour points
+    xc = eval(xcfun)
+    yc = eval(ycfun)
+    xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+    ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+
     # get the pointers from the numpy arrays
     kvecPtr = kvec.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     # containers to receive the output values of the C function
     realVal, imagVal = ctypes.c_double(0.), ctypes.c_double(0.)
 
-    xcPtr = xc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-    ycPtr = yc.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     nc1 = len(xc)
 
@@ -66,10 +74,10 @@ def computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc):
 random.seed(123)
 
 # number of cases/files
-n = 10
+ncases = 10
 
 # wavelength
-lmbda = 0.1234
+lmbda = 0.43456
 
 # centre of object
 xcmin, xcmax = 1.0, 3.0
@@ -87,10 +95,6 @@ dmin, dmax = 0., 0.9
 # phase
 pmin, pmax = -numpy.pi, numpy.pi
 
-# number of contour points 
-nc = 128
-nc1 = nc + 1
-t = numpy.linspace(0., 1., nc1)
 
 # grid
 nx = 127
@@ -99,16 +103,6 @@ xmin, xmax = -10., 0.
 ymin, ymax = -5., 5.
 xg = numpy.linspace(xmin, xmax, nx + 1)
 yg = numpy.linspace(ymin, ymax, ny + 1)
-
-dic_data = {
-    'xcentre': [],
-    'ycentre': [],
-    'a': [],
-    'k': [],
-    'd': [],
-    'phase':[],
-    'id': []
-}
 
 twoPi = 2. * numpy.pi
 # incident wavenumber
@@ -147,33 +141,33 @@ wavelib.computeScatteredWave.argtypes = [doubleStarType,
 # field
 inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
 
-for it in range(n):
+dic_data = {
+    'xcentre': [xcmin + (xcmax - xcmin)*random.random() for i in range(ncases)],
+    'ycentre': [ycmin + (ycmax - ycmin)*random.random() for i in range(ncases)],
+    'a': [amin + (amax - amin)*random.random() for i in range(ncases)],
+    'k': [kmin + (kmax - kmin)*random.random() for i in range(ncases)],
+    'd': [dmin + (dmax - dmin)*random.random() for i in range(ncases)],
+    'phase':[pmin + (pmax - pmin)*random.random() for i in range(ncases)],
+    'id': [i for i in range(ncases)]
+}
 
-    xcentre = xcmin + (xcmax - xcmin)**random.random()
-    ycentre = ycmin + (ycmax - ycmin)**random.random()
-    a = amin + (amax - amin)*random.random()
-    k = kmin + (kmax - kmin)*random.random()
-    d = dmin + (dmax - dmin)*random.random()
-    phase = pmin + (pmax - pmin)*random.random()
+# random time
+omegaTimes = [0. + (2*pi - 0.)*random.random() for i in range(ncases)]
 
-    print(f'iter = {it:06d} xcentre,ycentre = {xcentre:6.4f},{ycentre:6.4f} a = {a:6.4f} k = {k:6.4f} d = {d:6.4f} phase = {phase:6.3f}')
-    dic_data['xcentre'].append(xcentre)
-    dic_data['ycentre'].append(ycentre)
-    dic_data['a'].append(a)
-    dic_data['k'].append(k)
-    dic_data['d'].append(d)
-    dic_data['phase'].append(phase)
-    dic_data['id'].append(it)
+# compute the scatted field, add to the incident field, evaluate at a random time and take the real part
+res_data = [numpy.real(numpy.exp(-1j*omegaTimes[i]) * ( 
+                    computeScatteredField(xg, yg, wavelib, kvec, inci, 
+                    f'{dic_data["a"][i]}*cos(2*pi*(t - {dic_data["phase"][i]})) + {dic_data["xcentre"][i]}',
+                    f'{dic_data["a"][i]}*{dic_data["k"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}) - {dic_data["d"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}))) + {dic_data["ycentre"][i]}') \
+                    + inci
+                                                      )
+                      ) for i in range(ncases)]
 
-    xc = eval(f'{a}*cos(2*pi*(t - {phase})) + {xcentre}')
-    yc = eval(f'{a}*{k}*sin(2*pi*(t - {phase}) - {d}*sin(2*pi*(t - {phase}))) + {ycentre}')
+# save the data
+for i in range(ncases):
+    numpy.save(f'scatter_{i:05d}.npy', res_data[i])
 
-    scat = computeScatteredField(xg, yg, wavelib, kvec, inci, xc, yc)
 
-    # random wave phase
-    OmegaTime = 0. + (2*pi - 0.)*random.random()
-    data = numpy.real(numpy.exp(-1j*OmegaTime) * (scat + inci))
-    numpy.save(f'scatter_{it:05d}.npy', data)
 
 # create dataframe
 for key in 'xcentre', 'ycentre', 'a', 'k', 'd', 'phase':
