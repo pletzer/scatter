@@ -6,8 +6,9 @@ import math
 import os
 import ctypes
 import wave
+import multiprocessing
 
-def computeScatteredField(xg, yg, wavelib, kvec, inci, xcfun, ycfun):
+def computeScatteredField(args):
     """
     Compute the scattered field
 
@@ -20,6 +21,11 @@ def computeScatteredField(xg, yg, wavelib, kvec, inci, xcfun, ycfun):
     @param yc y values of the object's contour
     @return array of size ny1, nx1
     """
+
+    # unpack
+    xg, yg, wavelib, kvec, inci, xcfun, ycfun = args
+
+
     ny1, nx1 = inci.shape
     p = numpy.array([0., 0.,])
     pPtr = p.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -154,13 +160,15 @@ dic_data = {
 # random time
 omegaTimes = [0. + (2*pi - 0.)*random.random() for i in range(ncases)]
 
+input_values = [(xg, yg, wavelib, kvec, inci, 
+                 f'{dic_data["a"][i]}*cos(2*pi*(t - {dic_data["phase"][i]})) + {dic_data["xcentre"][i]}',
+                 f'{dic_data["a"][i]}*{dic_data["k"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}) - {dic_data["d"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}))) + {dic_data["ycentre"][i]}') \
+                 for i in range(ncases)]
+
 # compute the scatted field, add to the incident field, evaluate at a random time and take the real part
 res_data = [numpy.real(numpy.exp(-1j*omegaTimes[i]) * ( 
-                    computeScatteredField(xg, yg, wavelib, kvec, inci, 
-                    f'{dic_data["a"][i]}*cos(2*pi*(t - {dic_data["phase"][i]})) + {dic_data["xcentre"][i]}',
-                    f'{dic_data["a"][i]}*{dic_data["k"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}) - {dic_data["d"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}))) + {dic_data["ycentre"][i]}') \
-                    + inci
-                                                      )
+                    computeScatteredField(input_values[i]) \
+                    + inci                              )
                       ) for i in range(ncases)]
 
 # save the data
