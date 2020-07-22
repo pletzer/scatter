@@ -6,7 +6,37 @@ import math
 import os
 import ctypes
 import wave
-import multiprocessing
+
+
+# find the library under the build directory
+waveLibFile = ''
+for root, dirs, files in os.walk('build/'):
+    for file in files:
+        if file[-3:] == '.so':
+            waveLibFile = os.path.join(root, file)
+# open the shared library 
+wavelib = ctypes.CDLL(waveLibFile)
+
+# create some types for calling C++
+doubleStarType = ctypes.POINTER(ctypes.c_double) 
+
+# returns void
+wavelib.cincident.restype = None
+# double*, double*, double*, double*
+wavelib.cincident.argtypes = [doubleStarType, doubleStarType, 
+                              doubleStarType, doubleStarType]
+
+# returns void
+wavelib.computeScatteredWave.restype = None
+# double*, int, double*, double*, double*, double*, double* 
+wavelib.computeScatteredWave.argtypes = [doubleStarType,
+                                         ctypes.c_int, 
+                                         doubleStarType,
+                                         doubleStarType,
+                                         doubleStarType,
+                                         doubleStarType,
+                                         doubleStarType]
+
 
 def computeScatteredField(args):
     """
@@ -23,7 +53,7 @@ def computeScatteredField(args):
     """
 
     # unpack
-    xg, yg, wavelib, kvec, inci, xcfun, ycfun = args
+    xg, yg, kvec, inci, xcfun, ycfun = args
 
 
     ny1, nx1 = inci.shape
@@ -33,7 +63,7 @@ def computeScatteredField(args):
     # number of contour points 
     nc = 128
     nc1 = nc + 1
-    t = numpy.linspace(0., 1., nc1)
+    t = numpy.linspace(0., 2.*pi, nc1)
 
     # contour points
     xc = eval(xcfun)
@@ -80,7 +110,7 @@ def computeScatteredField(args):
 random.seed(123)
 
 # number of cases/files
-ncases = 10
+ncases = 1000
 
 # wavelength
 lmbda = 0.43456
@@ -93,7 +123,7 @@ ycmin, ycmax = -1.0, 1.4
 amin, amax = 0.1, 0.8
 
 # elongation
-kmin, kmax = 0.4, 1.8
+kmin, kmax = 0.13, 2.2
 
 # triangularity
 dmin, dmax = 0., 0.9
@@ -115,34 +145,6 @@ twoPi = 2. * numpy.pi
 knum = 2 * numpy.pi / lmbda
 kvec = numpy.array([knum, 0.,], numpy.float64)
 
-# find the library under the build directory
-waveLibFile = ''
-for root, dirs, files in os.walk('build/'):
-    for file in files:
-        if file[-3:] == '.so':
-            waveLibFile = os.path.join(root, file)
-# open the shared library 
-wavelib = ctypes.CDLL(waveLibFile)
-
-# create some types for calling C++
-doubleStarType = ctypes.POINTER(ctypes.c_double) 
-
-# returns void
-wavelib.cincident.restype = None
-# double*, double*, double*, double*
-wavelib.cincident.argtypes = [doubleStarType, doubleStarType, 
-                              doubleStarType, doubleStarType]
-
-# returns void
-wavelib.computeScatteredWave.restype = None
-# double*, int, double*, double*, double*, double*, double* 
-wavelib.computeScatteredWave.argtypes = [doubleStarType,
-                                         ctypes.c_int, 
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType,
-                                         doubleStarType]
 
 # field
 inci = numpy.zeros((ny + 1, nx + 1), numpy.complex64)
@@ -160,20 +162,18 @@ dic_data = {
 # random time
 omegaTimes = [0. + (2*pi - 0.)*random.random() for i in range(ncases)]
 
-input_values = [(xg, yg, wavelib, kvec, inci, 
-                 f'{dic_data["a"][i]}*cos(2*pi*(t - {dic_data["phase"][i]})) + {dic_data["xcentre"][i]}',
-                 f'{dic_data["a"][i]}*{dic_data["k"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}) - {dic_data["d"][i]}*sin(2*pi*(t - {dic_data["phase"][i]}))) + {dic_data["ycentre"][i]}') \
+input_values = [(xg, yg, kvec, inci, 
+               f'{dic_data["a"][i]} * cos(t) + {dic_data["xcentre"][i]}',
+               f'{dic_data["a"][i]} * {dic_data["k"][i]} * sin(t - {dic_data["d"][i]}*sin(t - {dic_data["phase"][i]})) + {dic_data["ycentre"][i]}',)
                  for i in range(ncases)]
 
-# compute the scatted field, add to the incident field, evaluate at a random time and take the real part
-res_data = [numpy.real(numpy.exp(-1j*omegaTimes[i]) * ( 
-                    computeScatteredField(input_values[i]) \
-                    + inci                              )
-                      ) for i in range(ncases)]
 
-# save the data
 for i in range(ncases):
-    numpy.save(f'scatter_{i:05d}.npy', res_data[i])
+    print(i)
+    # compute the scatted field
+    scat = computeScatteredField(input_values[i])
+    # add to the incident field, evaluate at a random time and take the real part
+    numpy.save(f'scatter_{i:05d}.npy', numpy.real( numpy.exp(-1j*omegaTimes[i]) * (scat + inci) ) )
 
 
 
