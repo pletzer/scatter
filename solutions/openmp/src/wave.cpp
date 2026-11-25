@@ -1,4 +1,5 @@
 #include "wave.h"
+#include "is_inside_contour.h"
 #include <boost/math/special_functions/bessel.hpp>
 
 // Make sure that Boost is thread-safe - we call Boost functions
@@ -115,23 +116,42 @@ cincident (const double kvec[], const double point[], double* real_part, double*
 
 extern "C" void computeScatteredWave(const double kvec[], int nc, const double xc[], const double yc[], 
                                      const double point[], double* real_part, double* imag_part) {
-    // Use primitive data types for the parallel reduction operation, to avoid having to define a
-    // custom OpenMP reduction for the "std::complex" data type
-    double res_real=0., res_imag=0.;
-    // OpenMP pragma defines the parallel region (where threads are spawned), data clauses and reduction
-    // Variables that are defined inside the loop are automatically private
-    #pragma omp parallel for default(none) shared(nc,xc,yc,kvec,point) reduction(+:res_real,res_imag)
+    std::complex<double> res(0., 0.);
     for (int i = 0; i < nc - 1; ++i) {
         double p0[] = {xc[i], yc[i]};
         double p1[] = {xc[i + 1], yc[i + 1]};
-        // res is now just a helper variable and can be defined inside the loop
-        // We also need to verify that "computeScatteredWaveElement" is thread-safe,
-        // as it will now run concurrently in multiple threads
-        std::complex<double> res = computeScatteredWaveElement(kvec, p0, p1, point);
-        res_real += res.real();
-        res_imag += res.imag();
+        res += computeScatteredWaveElement(kvec, p0, p1, point);
     }
-    *real_part = res_real;
-    *imag_part = res_imag;
+    *real_part = res.real();
+    *imag_part = res.imag();
 }
 
+extern "C" void computeField(const double kvec[], int nc, const double xc[], const double yc[],
+                             int nx1, int ny1, const double xg[], const double yg[],
+                             double inci[], double scat[]) {
+    const int n = nx1 * ny1;
+    // Each observer point is independent and costs O(nc) operations, which is enough work to
+    // amortise the cost of the threads (parallelising the loop over the nc segments of a
+    // single point is not: the parallel region would be entered once per observer point).
+    // The points inside the obstacle are cheap, hence the dynamic schedule.
+    // Each iteration writes to its own elements of inci and scat, so no reduction is needed.
+    // Variables defined inside the loop are private to each thread.
+    #pragma omp parallel for default(none) shared(n,nx1,nc,kvec,xc,yc,xg,yg,inci,scat) schedule(dynamic, 32)
+    for (int k = 0; k < n; ++k) {
+        const int j = k / nx1;
+        const int i = k % nx1;
+        const double p[] = {xg[i], yg[j]};
+
+        // leave the fields at zero inside the obstacle
+        if (isInsideContour(p, nc, xc, yc) == 1) continue;
+
+        std::complex<double> in = incident(kvec, p);
+        inci[2*k] = in.real();
+        inci[2*k + 1] = in.imag();
+
+        double re, im;
+        computeScatteredWave(kvec, nc, xc, yc, p, &re, &im);
+        scat[2*k] = re;
+        scat[2*k + 1] = im;
+    }
+}
