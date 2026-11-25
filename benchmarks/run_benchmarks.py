@@ -65,6 +65,11 @@ def run_once(name, directory, workers, args):
     return dt, checksum
 
 
+def sig2(x):
+    """Format with two significant digits: 75.92 -> '76', 4.26 -> '4.3', 1.0 -> '1.0'"""
+    return '{:.0f}'.format(x) if round(x, 1) >= 9.95 else '{:.1f}'.format(x)
+
+
 def machine():
     brand = platform.processor()
     if sys.platform == 'darwin':
@@ -123,7 +128,7 @@ def main():
         f.write('Wall-clock time of the whole run, best of {}.\n\n'.format(args.repeat))
         f.write('| variant | workers | time (s) | speedup vs original |\n|---|---:|---:|---:|\n')
         for r in rows:
-            f.write('| {variant} | {workers} | {seconds:.2f} | {speedup:.2f}x |\n'.format(**r))
+            f.write('| {variant} | {workers} | {seconds:.2f} | {sp}x |\n'.format(sp=sig2(r['speedup']), **r))
 
     plot(rows, args)
 
@@ -147,7 +152,7 @@ def plot(rows, args):
     ax.invert_yaxis()
     top = max(secs)
     for yi, r in zip(y, rows):
-        ax.text(r['seconds'] + top*0.01, yi, '{:.2f} s  ({:.2f}x)'.format(r['seconds'], r['speedup']),
+        ax.text(r['seconds'] + top*0.01, yi, '{:.2f} s  ({}x)'.format(r['seconds'], sig2(r['speedup'])),
                 va='center', color=ink, fontsize=9)
     ax.set_xlim(0, top*1.22)
     ax.set_xlabel('wall-clock time (s), lower is better', color=muted, fontsize=9)
