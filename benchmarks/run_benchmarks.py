@@ -35,6 +35,8 @@ VARIANTS = [
     ('jax',               'jax',                 None),   # XLA manages its own threads
 ]
 COMPILED = ('numba', 'cext', 'openmp')
+SLOW = 20.         # seconds, runs longer than this are not repeated (unless --repeat is given)
+FAST_REPEATS = 3   # runs of the faster variants, the best time is kept
 
 
 def build(directory):
@@ -84,7 +86,7 @@ def main():
     p.add_argument('-nx', type=int, default=256)
     p.add_argument('-ny', type=int, default=256)
     p.add_argument('-nc', type=int, default=256)
-    p.add_argument('--repeat', type=int, default=1, help='runs per variant, best time is kept')
+    p.add_argument('--repeat', type=int, default=1, help='minimum runs per variant, best time is kept (fast variants get at least %d)' % FAST_REPEATS)
     p.add_argument('--only', nargs='*', help='only time these variants')
     p.add_argument('--from-csv', action='store_true',
                    help='do not run anything, regenerate results.md and timings.png from results.csv')
@@ -103,7 +105,10 @@ def main():
         directory = os.path.join(ROOT, rel)
         if name in COMPILED:
             build(directory)
-        runs = [run_once(name, directory, workers, args) for _ in range(args.repeat)]
+        runs = [run_once(name, directory, workers, args)]
+        # slow runs are timed once; fast ones are noisy, so keep the best of several
+        extra = args.repeat - 1 if runs[0][0] > SLOW else max(args.repeat, FAST_REPEATS) - 1
+        runs += [run_once(name, directory, workers, args) for _ in range(extra)]
         best = min(t for t, _ in runs)
         checksum = runs[0][1]
         rows.append({'variant': name, 'workers': workers if workers else 'auto',
@@ -125,7 +130,7 @@ def main():
         f.write('Problem: nx={} ny={} nc={} ({} observer points x {} segments).  \n'.format(
             args.nx, args.ny, args.nc, (args.nx + 1)*(args.ny + 1), args.nc))
         f.write('Machine: {}.  \n'.format(machine()))
-        f.write('Wall-clock time of the whole run, best of {}.\n\n'.format(args.repeat))
+        f.write('Wall-clock time of the whole run: best of {} for runs under {:.0f} s, a single run otherwise.\n\n'.format(max(args.repeat, FAST_REPEATS), SLOW))
         f.write('| variant | workers | time (s) | speedup vs original |\n|---|---:|---:|---:|\n')
         for r in rows:
             f.write('| {variant} | {workers} | {seconds:.2f} | {sp}x |\n'.format(sp=sig2(r['speedup']), **r))
