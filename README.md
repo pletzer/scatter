@@ -66,6 +66,32 @@ and similar comments). The completed versions live in `solutions/`, which mirror
 `pytest` (`pip install -r requirements-dev.txt`) compares the computed fields point by point
 with the `original` version.
 
+## Performance
+
+Execution time of each version on a 257x257 grid with 256 contour segments (`python benchmarks/run_benchmarks.py`
+reproduces this; `solutions/` versions are timed):
+
+Problem: nx=256 ny=256 nc=256 (66049 observer points x 256 segments).  
+Machine: Apple M4, 10 cores, Darwin 25.6.0, Python 3.13.16.  
+Wall-clock time of the whole run, best of 1.
+
+| variant | workers | time (s) | speedup vs original |
+|---|---:|---:|---:|
+| original | 1 | 129.82 | 1.0x |
+| vect | 1 | 32.18 | 4.0x |
+| numba | 1 | 7.25 | 17.9x |
+| cext | 1 | 1.71 | 75.9x |
+| multiproc | 10 | 30.46 | 4.3x |
+| mpi | 10 | 28.89 | 4.5x |
+| openmp | 10 | 7.73 | 16.8x |
+| jax | auto | 1.99 | 65.2x |
+
+![Execution time by implementation](benchmarks/timings.png)
+
+These are single runs on one laptop and include start-up and JIT compilation time, so treat small
+differences as noise. Note that `openmp` is slower than the serial `cext` here: with only 256 segments
+per observer point the threading overhead outweighs the work.
+
 ## How to run the code
 
 Regardless of the version of the code, use
