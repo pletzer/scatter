@@ -81,10 +81,18 @@ def main():
     p.add_argument('-nc', type=int, default=256)
     p.add_argument('--repeat', type=int, default=1, help='runs per variant, best time is kept')
     p.add_argument('--only', nargs='*', help='only time these variants')
+    p.add_argument('--from-csv', action='store_true',
+                   help='do not run anything, regenerate results.md and timings.png from results.csv')
     args = p.parse_args()
 
     rows = []
-    for name, rel, workers in VARIANTS:
+    if args.from_csv:
+        with open(os.path.join(HERE, 'results.csv')) as f:
+            for r in csv.DictReader(f):
+                rows.append({'variant': r['variant'],
+                             'workers': int(r['workers']) if r['workers'].isdigit() else r['workers'],
+                             'seconds': float(r['seconds']), 'checksum': float(r['checksum'])})
+    for name, rel, workers in ([] if args.from_csv else VARIANTS):
         if args.only and name not in args.only:
             continue
         directory = os.path.join(ROOT, rel)
@@ -99,7 +107,7 @@ def main():
 
     ref = next((r for r in rows if r['variant'] == 'original'), rows[0])
     for r in rows:
-        r['speedup'] = round(ref['seconds'] / r['seconds'], 1)
+        r['speedup'] = round(ref['seconds'] / r['seconds'], 2)
         # all variants must compute the same thing (float32 sums: ~1e-4 relative)
         assert abs(r['checksum'] - ref['checksum']) < 1.e-4 * abs(ref['checksum']), r
 
@@ -115,7 +123,7 @@ def main():
         f.write('Wall-clock time of the whole run, best of {}.\n\n'.format(args.repeat))
         f.write('| variant | workers | time (s) | speedup vs original |\n|---|---:|---:|---:|\n')
         for r in rows:
-            f.write('| {variant} | {workers} | {seconds:.2f} | {speedup:.1f}x |\n'.format(**r))
+            f.write('| {variant} | {workers} | {seconds:.2f} | {speedup:.2f}x |\n'.format(**r))
 
     plot(rows, args)
 
@@ -139,7 +147,7 @@ def plot(rows, args):
     ax.invert_yaxis()
     top = max(secs)
     for yi, r in zip(y, rows):
-        ax.text(r['seconds'] + top*0.01, yi, '{:.1f} s  ({:.1f}x)'.format(r['seconds'], r['speedup']),
+        ax.text(r['seconds'] + top*0.01, yi, '{:.2f} s  ({:.2f}x)'.format(r['seconds'], r['speedup']),
                 va='center', color=ink, fontsize=9)
     ax.set_xlim(0, top*1.22)
     ax.set_xlabel('wall-clock time (s), lower is better', color=muted, fontsize=9)
