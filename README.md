@@ -19,8 +19,8 @@ This program shows how a Python code can be modified to run faster using various
 
 ## Requirements
 
- * Python >= 3.10 (tested 3.13)
- * NumPy >= 2, SciPy, Numba (numba variant), mpi4py + an MPI library (mpi variant), setuptools
+ * Python >= 3.12 (tested 3.12, 3.13)
+ * NumPy >= 2, SciPy, Numba (numba variant), JAX (jax variant), mpi4py + an MPI library (mpi variant), setuptools
  * Boost (header-only parts, tested 1.92) and a C++ compiler (cext, numba, openmp variants)
  * OpenMP runtime (openmp variant; on macOS `brew install libomp`)
 
@@ -50,11 +50,12 @@ The directories below
    |-multiproc
    |-mpi
    |-openmp
+   |-jax
 
 ```
 contain different versions of the scatter code, all producing the same result but each having 
 a different implementation. For instance `vect` has a vectorised implementation and `cext` 
-has some functions coded in C++ for additional speed. 
+has some functions coded in C++ for additional speed. `jax` uses JAX to compile and vectorise the whole computation. 
 
 ## Exercises and solutions
 
