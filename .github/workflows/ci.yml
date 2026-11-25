@@ -32,7 +32,7 @@ jobs:
         run: brew install boost open-mpi libomp
 
       - name: Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
       - name: Build and check the exercises
         run: ./ci/check_all.sh
@@ -41,5 +41,10 @@ jobs:
 
       - name: Build and check the solutions
         run: ./ci/check_all.sh solutions
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+
+      - name: Compare the fields point by point
+        run: pytest -v
         env:
           OMPI_MCA_rmaps_base_oversubscribe: "1"

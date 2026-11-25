@@ -1,7 +1,7 @@
 # scatter
 
 Scatter is a simple program that computes the scattering of an incident wave on a 2D
-object. The total wave (incident + scattered) satisfies homomegenous Neunmann boundary
+object. The total wave (incident + scattered) satisfies homogeneous Neumann boundary
 conditions on the obstacle.
 
 The numerical method integrates Green's functions along the boundary and 
@@ -62,7 +62,9 @@ has some functions coded in C++ for additional speed. `jax` uses JAX to compile 
 The top-level directories above contain the exercises: `vect`, `numba`, `multiproc`, `mpi` and
 `openmp` have parts for you to complete (look for `TO DO`, `VECTORISE`, `ADD OPENMP PRAGMA HERE`
 and similar comments). The completed versions live in `solutions/`, which mirrors the layout above.
-`ci/check_all.sh` and `ci/check_all.sh solutions` build and check each set.
+`ci/check_all.sh` and `ci/check_all.sh solutions` build and check the checksum of each set, and
+`pytest` (`pip install -r requirements-dev.txt`) compares the computed fields point by point
+with the `original` version.
 
 ## How to run the code
 
