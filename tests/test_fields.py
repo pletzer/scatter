@@ -86,3 +86,15 @@ def test_helpful_error_if_not_built(name, tmp_path):
                             cwd=tmp_path, capture_output=True, text=True)
     assert result.returncode != 0
     assert 'python setup.py build' in result.stderr
+
+
+def test_savevtk_copies_are_identical():
+    """saveVtk.py is deliberately copied into every directory so that each example runs
+    standalone. Make sure that a fix to one copy is applied to all of them."""
+    copies = sorted(glob.glob(os.path.join(ROOT, '**', 'saveVtk.py'), recursive=True))
+    copies = [c for c in copies if '.venv' not in c.split(os.sep)]
+    assert len(copies) > 1
+    contents = {c: open(c, 'rb').read() for c in copies}
+    reference = contents[copies[0]]
+    differing = [os.path.relpath(c, ROOT) for c, data in contents.items() if data != reference]
+    assert not differing, '{} differs from {}'.format(differing, os.path.relpath(copies[0], ROOT))
