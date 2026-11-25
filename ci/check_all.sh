@@ -32,6 +32,12 @@ for d in original vect multiproc numba cext openmp; do
     check "$d" "$out"
 done
 
+# the jax example is complete, so it has no separate solution
+if [ -d "$ROOT/jax" ]; then
+    out=$(cd "$ROOT/jax" && python scatter.py $ARGS)
+    check jax "$out"
+fi
+
 out=$(cd "$ROOT/mpi" && $MPIRUN python scatter.py $ARGS)
 check mpi "$out"
 
