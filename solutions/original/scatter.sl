@@ -4,9 +4,8 @@
 #SBATCH --error=scatter-%j.error
 #SBATCH --output=scatter-%j.output
 #SBATCH --time=00:10:00
-#SBATCH --ntasks=4
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
 
-
-map --profile srun python scatter.py
+srun time python scatter.py -checksum

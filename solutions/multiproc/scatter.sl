@@ -5,12 +5,8 @@
 #SBATCH --output=scatter-%j.output
 #SBATCH --time=00:10:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=4
 #SBATCH --hint=nomultithread
 
 
-rm -rf build
-python setup.py build --force
-
-module load forge
-srun map --profile python scatter.py -checksum
+srun time python scatter.py -checksum
