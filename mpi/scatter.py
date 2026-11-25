@@ -111,7 +111,7 @@ for indx in local_inds:
 localWave = inci + scat
 
 # TO DO gather local wave on processor root
-# Hit: comm.gather returns a list of 1d arrays on process root, use 
+# Hint: comm.gather returns a list of 1d arrays on process root, use 
 # numpy.concatenate to turn this into a flat array. Then reshape the 
 # array into a ny1 times nx1 array
 

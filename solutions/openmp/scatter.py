@@ -5,6 +5,7 @@ from numpy import cos, sin, pi
 import math
 import saveVtk
 import ctypes
+import glob
 import os
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
@@ -43,12 +44,14 @@ ymin, ymax = yc.min() - 3*args.lmbda, yc.max() + 4*args.lmbda
 xg = numpy.linspace(xmin, xmax, nx + 1)
 yg = numpy.linspace(ymin, ymax, ny + 1)
 
-# find the library under the build directory
-waveLibFile = ''
-for root, dirs, files in os.walk('build/'):
-    for file in files:
-        if file[-3:] == '.so':
-            waveLibFile = os.path.join(root, file)
+# find the shared library under the build directory next to this file, so that the
+# script works from any directory
+_buildDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
+_libFiles = sorted(glob.glob(os.path.join(_buildDir, '**', '*.so'), recursive=True))
+if not _libFiles:
+    raise FileNotFoundError('no shared library found under {}: '
+                            'build it first with "python setup.py build"'.format(_buildDir))
+waveLibFile = _libFiles[-1]
 
 # open the shared library 
 wavelib = ctypes.CDLL(waveLibFile)
