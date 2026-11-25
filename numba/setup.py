@@ -2,7 +2,7 @@ import os
 from setuptools import setup, Extension
 
 # directory where BOOST is installed
-boost_dir = '/usr/local/'
+boost_dir = '/opt/homebrew' if os.path.isdir('/opt/homebrew/include/boost') else '/usr/local'
 if os.environ.get('BOOST_DIR'):
     boost_dir = os.environ.get('BOOST_DIR')
 elif os.environ.get('EBROOTBOOST'):
@@ -15,9 +15,6 @@ setup(
     scripts=['scatter.py'],
     ext_modules=[Extension('bessel_funcs', ['src/bessel_funcs.cpp', ], 
                                    include_dirs=[boost_dir + '/include'],
-                                   library_dirs=[boost_dir + '/lib'],
-                                   libraries=['boost_math_tr1'],
-                                   runtime_library_dirs = [boost_dir + '/lib'],
                        ),
                      ],
 )

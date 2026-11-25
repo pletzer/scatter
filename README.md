@@ -19,11 +19,24 @@ This program shows how a Python code can be modified to run faster using various
 
 ## Requirements
 
- * Python 2.7.x (tested 2.7.14) or 3.x (tested 3.6.3)
- * Scipy (tested 1.0.0, 1.0.1)
- * Numpy (tested 1.13.1, 1.13.3)
- * Boost (1.6.8, 1.6.1)
- * C++ compiler
+ * Python >= 3.10 (tested 3.13)
+ * NumPy >= 2, SciPy, Numba (numba variant), mpi4py + an MPI library (mpi variant), setuptools
+ * Boost (header-only parts, tested 1.92) and a C++ compiler (cext, numba, openmp variants)
+ * OpenMP runtime (openmp variant; on macOS `brew install libomp`)
+
+## Setting up the environment
+
+```
+python3 -m venv .venv    # or: uv venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt   # mpi4py needs mpicc on the PATH (e.g. brew install open-mpi)
+```
+The C++ variants (`cext`, `numba`, `openmp`) must be built first, from inside their directory:
+```
+BOOST_DIR=<path-to-boost> python setup.py build
+```
+`BOOST_DIR` defaults to `/opt/homebrew` or `/usr/local`. The `mpi` variant is run with
+`mpirun -n 4 python scatter.py -checksum`.
 
 ## Directory layout
 

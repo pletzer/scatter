@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: System dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libboost-dev libopenmpi-dev openmpi-bin
+
+      - name: System dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install boost open-mpi libomp
+
+      - name: Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build and check all variants
+        run: ./ci/check_all.sh
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"

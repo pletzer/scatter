@@ -6,7 +6,6 @@ import math
 import saveVtk
 import ctypes
 import os
-import wave
 
 parser = argparse.ArgumentParser(description='Compute field scattered by an obstacle.')
 parser.add_argument('-lambda', dest='lmbda', type=float, default=0.5, help='x wavelength')

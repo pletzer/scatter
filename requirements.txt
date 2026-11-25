@@ -1,0 +1,5 @@
+numpy>=2.0
+scipy>=1.14
+numba>=0.60
+mpi4py>=4.0
+setuptools>=70
