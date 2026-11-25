@@ -34,7 +34,12 @@ jobs:
       - name: Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Build and check all variants
+      - name: Build and check the exercises
         run: ./ci/check_all.sh
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+
+      - name: Build and check the solutions
+        run: ./ci/check_all.sh solutions
         env:
           OMPI_MCA_rmaps_base_oversubscribe: "1"

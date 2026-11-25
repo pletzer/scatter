@@ -3,7 +3,10 @@
 # reference checksum on a small problem. Run from anywhere; uses the active python.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# usage: check_all.sh [dir]   dir = exercises (default) or solutions
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$REPO/${1:-.}"
+ROOT="$(cd "$ROOT" && pwd)"
 ARGS="-checksum -nx 16 -ny 16 -nc 32"
 REF=85.2309      # reference |scat|^2 sum for the small problem
 RTOL=1e-4
@@ -32,8 +35,14 @@ done
 out=$(cd "$ROOT/mpi" && $MPIRUN python scatter.py $ARGS)
 check mpi "$out"
 
-# -save writes the VTK files
-tmp=$(mktemp -d)
-(cd "$tmp" && PYTHONPATH="$ROOT/vect" python "$ROOT/vect/scatter.py" -nx 8 -ny 8 -nc 16 -save)
-test "$(ls "$tmp"/scatter_*.vtk | wc -l)" -eq 20 && echo "save       OK"
-rm -rf "$tmp"
+# -save writes the VTK files (the mpi exercise is unfinished, so only check
+# it for the solutions)
+saves="vect"
+[ "$(basename "$ROOT")" = solutions ] && saves="vect mpi"
+for d in $saves; do
+    tmp=$(mktemp -d)
+    if [ "$d" = mpi ]; then run="$MPIRUN python"; else run="python"; fi
+    (cd "$ROOT/$d" && $run scatter.py -nx 8 -ny 8 -nc 16 -save > /dev/null && mv scatter_*.vtk "$tmp")
+    test "$(ls "$tmp"/scatter_*.vtk | wc -l)" -eq 20 && echo "save $d   OK"
+    rm -rf "$tmp"
+done

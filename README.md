@@ -56,6 +56,13 @@ contain different versions of the scatter code, all producing the same result bu
 a different implementation. For instance `vect` has a vectorised implementation and `cext` 
 has some functions coded in C++ for additional speed. 
 
+## Exercises and solutions
+
+The top-level directories above contain the exercises: `vect`, `numba`, `multiproc`, `mpi` and
+`openmp` have parts for you to complete (look for `TO DO`, `VECTORISE`, `ADD OPENMP PRAGMA HERE`
+and similar comments). The completed versions live in `solutions/`, which mirrors the layout above.
+`ci/check_all.sh` and `ci/check_all.sh solutions` build and check each set.
+
 ## How to run the code
 
 Regardless of the version of the code, use
